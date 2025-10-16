@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="{{ asset('orders.css') }}"> 
     
     <style>
-        /* Minimal Layout Styles (Copy/Paste this block into your file) */
+        /* Minimal Layout Styles for Integration */
         body { font-family: sans-serif; margin: 0; background-color: #f4f4f4; }
         .dashboard-layout { display: grid; grid-template-columns: 200px 1fr; min-height: 100vh; }
         .sidebar { background-color: #333; color: white; padding: 20px 0; position: fixed; height: 100%; width: 200px; }
@@ -20,6 +20,7 @@
         .panel-title { color: #a03c3c; margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 20px; }
         .panel { background: white; padding: 20px; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .modal-overlay { display: flex; justify-content: center; align-items: center; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 100; }
+        .modal-content { background: white; margin: 5% auto; padding: 30px; border-radius: 8px; width: 600px; max-width: 90%; }
     </style>
 </head>
 <body>
@@ -82,9 +83,10 @@
             <div id="order-modal" class="modal-overlay" style="display: none;">
                 <div class="modal-content">
                     <h2 style="margin-top: 0;">Create New Order</h2>
-                    <form id="order-form" method="POST" action="/api/orders">
+                    
+                    <form id="order-form" method="POST" action="{{ route('api.orders.store') }}">
                         @csrf
-                        <input type="hidden" name="order_status" value="Completed">
+                        <input type="hidden" name="order_status" value="Completed"> 
                         
                         <div style="margin-bottom: 15px;">
                             <label>Order Type:</label>
@@ -106,6 +108,7 @@
                                 <tr>
                                     <th style="padding: 5px;">Item</th>
                                     <th style="padding: 5px;">Qty</th>
+                                    <th style="padding: 5px;">Unit</th>
                                     <th style="padding: 5px;">Price/Unit</th>
                                     <th class="expiry-input" style="padding: 5px; display: none;">Expiry (If Purchase)</th>
                                     <th style="padding: 5px;"></th>
@@ -126,192 +129,6 @@
         </main>
     </div>
     
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const API_ORDERS = '/api/orders';
-            const API_INVENTORY = '/api/inventory';
-            const API_SUPPLIERS = '/api/suppliers';
-
-            const tableBody = document.getElementById('orders-table-body');
-            const orderModal = document.getElementById('order-modal');
-            const orderForm = document.getElementById('order-form');
-            const orderTypeSelect = document.getElementById('order-type-select');
-            const supplierGroup = document.getElementById('supplier-select-group');
-            const supplierDropdownOrder = document.getElementById('supplier-dropdown-order');
-            const itemRowsBody = document.getElementById('order-item-rows');
-            
-            const csrfToken = orderForm.querySelector('input[name="_token"]').value;
-
-            let allInventory = [];
-            let allSuppliers = [];
-            let lineItemCounter = 0;
-
-            // --- A. INITIAL DATA LOAD ---
-
-            async function loadInitialData() {
-                try {
-                    const [ordersData, inventoryData, supplierData] = await Promise.all([
-                        fetch(API_ORDERS).then(res => res.json()),
-                        fetch(API_INVENTORY).then(res => res.json()),
-                        fetch(API_SUPPLIERS).then(res => res.json())
-                    ]);
-                    
-                    allInventory = inventoryData;
-                    allSuppliers = supplierData;
-                    
-                    renderOrdersTable(ordersData);
-                    renderSupplierDropdowns(); 
-                    
-                } catch (error) {
-                    console.error('Initial data load error:', error);
-                    // Display error if API calls fail
-                    tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: red;">Failed to load order history. Check console for error details.</td></tr>';
-                }
-            }
-            
-            function renderSupplierDropdowns() {
-                supplierDropdownOrder.innerHTML = '<option value="">-- Select Supplier --</option>';
-                allSuppliers.forEach(supplier => {
-                    const option = document.createElement('option');
-                    option.value = supplier.id;
-                    option.textContent = supplier.supplier_name;
-                    supplierDropdownOrder.appendChild(option);
-                });
-            }
-
-            function renderOrdersTable(orders) {
-                tableBody.innerHTML = '';
-                if (orders.length === 0) {
-                     tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 15px;">No orders found.</td></tr>';
-                     return;
-                }
-
-                orders.forEach(order => {
-                    const row = document.createElement('tr');
-                    const statusColor = order.order_status === 'Completed' ? 'green' : (order.order_status === 'Pending' ? 'orange' : 'red');
-
-                    row.innerHTML = `
-                        <td style="padding: 10px; border-bottom: 1px solid #eee;">${order.id}</td>
-                        <td style="padding: 10px; border-bottom: 1px solid #eee;">${order.order_type}</td>
-                        <td style="padding: 10px; border-bottom: 1px solid #eee;">${order.order_date.substring(0, 10)}</td>
-                        <td style="padding: 10px; border-bottom: 1px solid #eee;"><span style="color: ${statusColor};">${order.order_status}</span></td>
-                        <td style="padding: 10px; border-bottom: 1px solid #eee;">${order.user.first_name} ${order.user.last_name.charAt(0)}.</td>
-                        <td style="padding: 10px; border-bottom: 1px solid #eee;"><button>View Details</button></td>
-                    `;
-                    tableBody.appendChild(row);
-                });
-            }
-            
-            // --- B. DYNAMIC FORM LOGIC ---
-            
-            function updateFormVisibility() {
-                const isSupplierOrder = orderTypeSelect.value === 'Supplier';
-                supplierGroup.style.display = isSupplierOrder ? 'block' : 'none';
-                
-                // Show/Hide Expiry column header and input fields
-                document.querySelectorAll('#order-items-table .expiry-input').forEach(el => {
-                    el.style.display = isSupplierOrder ? 'table-cell' : 'none';
-                });
-            }
-            
-            function addItemRow() {
-                lineItemCounter++;
-                const row = document.createElement('tr');
-                row.id = `line-item-${lineItemCounter}`;
-                
-                // Build item dropdown dynamically
-                const itemOptions = allInventory.map(item => 
-                    `<option value="${item.id}" data-unit="${item.unit}">
-                        ${item.name} (${item.unit}) - Stock: ${item.quantity.toFixed(1)}
-                    </option>`
-                ).join('');
-
-                row.innerHTML = `
-                    <td>
-                        <select name="item_id[]" required style="width: 100%; padding: 5px;">
-                            <option value="">Select Item</option>
-                            ${itemOptions}
-                        </select>
-                    </td>
-                    <td><input type="number" name="quantity[]" required min="0.01" step="any" style="width: 60px; padding: 5px;"></td>
-                    <td><input type="number" name="unit_price[]" required min="0" step="any" style="width: 80px; padding: 5px;"></td>
-                    <td class="expiry-input" style="display: none;"><input type="date" name="expiry_date[]" style="width: 100px; padding: 5px;"></td>
-                    <td><button type="button" onclick="document.getElementById('order-item-rows').removeChild(document.getElementById('line-item-${lineItemCounter}')); updateFormVisibility();" style="color: red; border: none; background: none;">X</button></td>
-                `;
-                
-                itemRowsBody.appendChild(row);
-                updateFormVisibility(); // Check visibility for new row
-            }
-            
-            // --- C. SUBMISSION HANDLER ---
-
-            orderForm.addEventListener('submit', async function(event) {
-                event.preventDefault();
-
-                // 1. Collect line item data
-                const itemIds = Array.from(this.querySelectorAll('[name="item_id[]"]')).map(el => el.value);
-                const quantities = Array.from(this.querySelectorAll('[name="quantity[]"]')).map(el => el.value);
-                const prices = Array.from(this.querySelectorAll('[name="unit_price[]"]')).map(el => el.value);
-                const expiryDates = Array.from(this.querySelectorAll('[name="expiry_date[]"]')).map(el => el.value);
-
-                const items = itemIds.map((id, index) => ({
-                    item_id: id,
-                    quantity: parseFloat(quantities[index]),
-                    unit_price: parseFloat(prices[index]),
-                    expiry_date: orderTypeSelect.value === 'Supplier' ? expiryDates[index] : null,
-                }));
-                
-                const payload = {
-                    _token: csrfToken,
-                    order_type: orderTypeSelect.value,
-                    supplier_id: orderTypeSelect.value === 'Supplier' ? supplierDropdownOrder.value : null,
-                    order_status: 'Completed', 
-                    items: items,
-                };
-                
-                // 2. Send to API
-                try {
-                    const response = await fetch(orderForm.action, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': csrfToken, 
-                        },
-                        body: JSON.stringify(payload),
-                    });
-                    
-                    const result = await response.json();
-
-                    if (response.ok) {
-                        alert(result.message);
-                        orderModal.style.display = 'none';
-                        orderForm.reset();
-                        loadInitialData(); // Refresh history table
-                    } else {
-                        const errorMsg = result.errors ? Object.values(result.errors).flat().join('\n') : (result.error || result.message || 'Failed to process order.');
-                        alert('Error: ' + errorMsg);
-                    }
-                } catch (error) {
-                    console.error('Order submission error:', error);
-                    alert('An unexpected network error occurred.');
-                }
-            });
-
-            // --- D. INITIALIZATION AND EVENT LISTENERS ---
-            
-            document.getElementById('create-order-btn').addEventListener('click', () => {
-                itemRowsBody.innerHTML = ''; 
-                orderForm.reset();
-                addItemRow();
-                orderModal.style.display = 'block';
-            });
-            
-            document.getElementById('add-item-row-btn').addEventListener('click', addItemRow);
-            
-            orderTypeSelect.addEventListener('change', updateFormVisibility);
-
-            loadInitialData();
-        });
-    </script>
+    <script src="{{ asset('js/orders.js') }}" defer></script>
 </body>
 </html>

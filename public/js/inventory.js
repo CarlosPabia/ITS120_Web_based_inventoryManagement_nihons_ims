@@ -1,211 +1,219 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const tableBody = document.getElementById('inventory-table-body');
-    const stockDrawer = document.getElementById('stock-drawer');
-    const stockForm = document.getElementById('stock-form');
-    const supplierDropdown = document.getElementById('supplier-dropdown');
-    
-    // The CSRF token is read directly from the hidden input field in the form
-    const csrfToken = document.querySelector('input[name="_token"]').value; 
-    
-    let allSuppliers = []; // To store supplier data globally for the dropdown
+    // FIX: Update the API URLs to match the clean web routes
+    const API_ORDERS_READ = '/orders-data';         // GET route for history
+    const API_ORDERS_STORE = '/orders-data';        // POST route for new order
+    const API_INVENTORY_READ = '/inventory-data';   // Inventory read for item dropdowns
+    const API_SUPPLIERS_READ = '/suppliers-data';   // Suppliers read for dropdowns
 
-    // --- A. HELPER FUNCTIONS ---
-
-    function getStatusColor(status) {
-        if (status === 'Low') return 'orange';
-        if (status === 'Critical') return 'red';
-        return 'green';
-    }
+    const tableBody = document.getElementById('orders-table-body');
+    const orderModal = document.getElementById('order-modal');
+    const orderForm = document.getElementById('order-form');
+    const orderTypeSelect = document.getElementById('order-type-select');
+    const supplierGroup = document.getElementById('supplier-select-group');
+    const supplierDropdownOrder = document.getElementById('supplier-dropdown-order');
+    const itemRowsBody = document.getElementById('order-item-rows');
     
-    function formatDate(dateString) {
-        if (!dateString) return 'N/A';
-        // Converts YYYY-MM-DD to MM/DD/YYYY
-        const date = new Date(dateString + 'T00:00:00'); 
-        return date.toLocaleDateString('en-US');
-    }
+    // Get the CSRF token from the form input
+    const csrfToken = orderForm.querySelector('input[name="_token"]').value;
 
-    // --- B. LOAD INITIAL DATA (Inventory and Suppliers) ---
+    let allInventory = [];
+    let allSuppliers = [];
+    let lineItemCounter = 0;
+
+    // --- A. INITIAL DATA LOAD ---
 
     async function loadInitialData() {
         try {
-            // 1. Fetch Inventory Data (Main Table)
-            const inventoryPromise = fetch('/api/inventory').then(res => res.json());
+            // Fetch all necessary data concurrently
+            const [ordersResponse, inventoryResponse, supplierResponse] = await Promise.all([
+                fetch(API_ORDERS_READ),
+                fetch(API_INVENTORY_READ),
+                fetch(API_SUPPLIERS_READ)
+            ]);
 
-            // 2. Fetch Supplier Data (For Dropdown)
-            // Note: Suppliers API is protected by Auth, but not RBAC at the API level
-            const supplierPromise = fetch('/api/suppliers').then(res => res.json());
-
-            const [inventoryData, supplierData] = await Promise.all([inventoryPromise, supplierPromise]);
+            // NOTE: We don't need to check response.ok here, as the catch block handles the failure,
+            // but we need to parse the response to get the data.
             
+            const ordersData = await ordersResponse.json();
+            const inventoryData = await inventoryResponse.json();
+            const supplierData = await supplierResponse.json();
+            
+            allInventory = inventoryData;
             allSuppliers = supplierData;
             
-            renderSupplierDropdown();
-            renderInventoryTable(inventoryData);
+            renderOrdersTable(ordersData);
+            renderSupplierDropdowns(); 
             
         } catch (error) {
-            console.error('Failed to load initial data:', error);
-            tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: red; padding: 20px;">Could not connect to the data API.</td></tr>';
+            console.error('Initial data load error:', error);
+            // Display error if API calls fail
+            tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: red;">Failed to load order history. Check console for error details.</td></tr>';
         }
     }
-
-    // --- C. RENDER FUNCTIONS ---
-
-    function renderSupplierDropdown() {
-        supplierDropdown.innerHTML = '<option value="">-- Select Supplier --</option>';
+    
+    function renderSupplierDropdowns() {
+        supplierDropdownOrder.innerHTML = '<option value="">-- Select Supplier --</option>';
         allSuppliers.forEach(supplier => {
             const option = document.createElement('option');
             option.value = supplier.id;
             option.textContent = supplier.supplier_name;
-            supplierDropdown.appendChild(option);
+            supplierDropdownOrder.appendChild(option);
         });
     }
 
-    function renderInventoryTable(items) {
-        tableBody.innerHTML = ''; // Clear existing content
-        
-        if (items.length === 0) {
-             tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 15px;">No inventory records found.</td></tr>';
+    // --- B. RENDER ORDER HISTORY TABLE ---
+
+    function renderOrdersTable(orders) {
+        tableBody.innerHTML = '';
+        if (orders.length === 0) {
+             tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 15px;">No orders found.</td></tr>';
              return;
         }
 
-        items.forEach(item => {
+        orders.forEach(order => {
             const row = document.createElement('tr');
+            const statusColor = order.order_status === 'Completed' ? 'green' : (order.order_status === 'Pending' ? 'orange' : 'red');
             
-            // Assume the item.batches array (from the backend model) is simplified to show one expiry date
-            // Note: For simplicity, we just use 'N/A' for Expiry Date as the backend logic is complex.
-            
-            const statusColor = getStatusColor(item.status);
+            // Safely extract data using null checks
+            const createdBy = order.user 
+                ? `${order.user.first_name} ${order.user.last_name.charAt(0)}.` 
+                : 'System/Unknown';
 
             row.innerHTML = `
-                <td style="padding: 10px; border-bottom: 1px solid #eee;">${item.id}</td>
-                <td style="padding: 10px; border-bottom: 1px solid #eee;">${item.name}</td>
-                <td style="padding: 10px; border-bottom: 1px solid #eee;">${item.quantity.toFixed(2)} ${item.unit}</td>
-                <td style="padding: 10px; border-bottom: 1px solid #eee;">N/A</td> 
-                <td style="padding: 10px; border-bottom: 1px solid #eee;">${item.supplier_name}</td>
-                <td style="padding: 10px; border-bottom: 1px solid #eee;"><span style="color: ${statusColor}; font-weight: bold;">${item.status}</span></td>
-                <td style="padding: 10px; border-bottom: 1px solid #eee;">
-                    <button type="button" class="edit-btn" data-item='${JSON.stringify(item)}' style="margin-right: 5px;">Edit</button>
-                    <button type="button" class="delete-btn" data-item-id="${item.id}" style="color: red;">Delete</button>
-                </td>
+                <td style="padding: 10px; border-bottom: 1px solid #eee;">${order.id}</td>
+                <td style="padding: 10px; border-bottom: 1px solid #eee;">${order.order_type}</td>
+                <td style="padding: 10px; border-bottom: 1px solid #eee;">${order.order_date.substring(0, 10)}</td>
+                <td style="padding: 10px; border-bottom: 1px solid #eee;"><span style="color: ${statusColor};">${order.order_status}</span></td>
+                <td style="padding: 10px; border-bottom: 1px solid #eee;">${createdBy}</td>
+                <td style="padding: 10px; border-bottom: 1px solid #eee;"><button>View Details</button></td>
             `;
             tableBody.appendChild(row);
         });
-        
-        addActionButtonListeners(items);
     }
     
-    // --- D. FORM SUBMISSION LOGIC (CREATE/UPDATE STOCK) ---
+    // --- C. DYNAMIC FORM LOGIC (addItemRow, updateFormVisibility) ---
     
-    stockForm.addEventListener('submit', async function(event) {
-        event.preventDefault();
+    function updateFormVisibility() {
+        const isSupplierOrder = orderTypeSelect.value === 'Supplier';
+        supplierGroup.style.display = isSupplierOrder ? 'block' : 'none';
         
-        const formData = new FormData(stockForm);
-        const itemId = formData.get('id'); // Get ID from hidden field
+        document.querySelectorAll('#order-items-table .expiry-input').forEach(el => {
+            el.style.display = isSupplierOrder ? 'table-cell' : 'none';
+        });
+    }
+    
+    function addItemRow() {
+        lineItemCounter++;
+        const row = document.createElement('tr');
+        row.id = `line-item-${lineItemCounter}`;
         
-        const data = {
-            id: itemId || null,
-            item_name: formData.get('item_name'),
-            unit_of_measure: formData.get('unit_of_measure'),
-            supplier_id: formData.get('supplier_id') || null,
-            quantity_adjustment: parseFloat(formData.get('quantity_adjustment')) || 0,
-            expiry_date: formData.get('expiry_date'),
-        };
+        // Build item dropdown dynamically, embedding the unit into a data-attribute
+        const itemOptions = allInventory.map(item => 
+            `<option value="${item.id}" data-unit="${item.unit}">
+                ${item.name} (Stock: ${item.quantity.toFixed(1)})
+            </option>`
+        ).join('');
 
-        try {
-            const response = await fetch('/api/inventory', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken, // Pass CSRF token for security
-                    'Accept': 'application/json',
-                },
-                body: JSON.stringify(data),
-            });
+        row.innerHTML = `
+            <td>
+                <select name="item_id[]" required class="item-select" style="width: 100%; padding: 5px;">
+                    <option value="">Select Item</option>
+                    ${itemOptions}
+                </select>
+                <span class="item-unit-display" style="font-size: 11px; margin-top: 3px; display: block; color: #555;">Unit: —</span>
+            </td>
+            <td><input type="number" name="quantity[]" required min="0.01" step="any" style="width: 60px; padding: 5px;"></td>
+            <td><input type="number" name="unit_price[]" required min="0" step="any" style="width: 80px; padding: 5px;"></td>
+            <td class="expiry-input" style="display: none;"><input type="date" name="expiry_date[]" style="width: 100px; padding: 5px;"></td>
+            <td><button type="button" onclick="document.getElementById('order-item-rows').removeChild(document.getElementById('line-item-${lineItemCounter}')); updateFormVisibility();" style="color: red; border: none; background: none;">X</button></td>
+        `;
+        
+        itemRowsBody.appendChild(row);
+        updateFormVisibility();
+
+        // ADD EVENT LISTENER FOR UNIT AUTO-FILL
+        const newItemSelect = row.querySelector('.item-select');
+        newItemSelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const unitDisplay = row.querySelector('.item-unit-display');
             
-            const result = await response.json();
-
-            if (response.ok) {
-                alert(result.message);
-                stockDrawer.style.display = 'none'; // Close drawer
-                stockForm.reset();
-                loadInitialData(); // Refresh data
+            if (selectedOption.value) {
+                const unit = selectedOption.dataset.unit;
+                unitDisplay.textContent = `Unit: ${unit}`;
             } else {
-                // Display validation errors from Laravel
-                const errorMsg = result.errors ? Object.values(result.errors).flat().join('\n') : (result.error || result.message || 'Failed to save changes.');
-                alert('Error: ' + errorMsg);
+                unitDisplay.textContent = `Unit: —`;
             }
-        } catch (error) {
-            console.error('Submission error:', error);
-            alert('An unexpected network error occurred.');
-        }
-    });
-    
-    // --- E. ACTION LISTENERS ---
-    
-    function addActionButtonListeners(items) {
-        // 1. EDIT BUTTONS
-        document.querySelectorAll('.edit-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                const itemData = JSON.parse(this.dataset.item);
-                
-                // Populate the form fields with current data
-                document.getElementById('form-item-id').value = itemData.id;
-                stockForm.querySelector('[name="item_name"]').value = itemData.name;
-                stockForm.querySelector('[name="unit_of_measure"]').value = itemData.unit;
-                stockForm.querySelector('[name="supplier_id"]').value = itemData.supplier_id || '';
-                
-                // Clear adjustment fields for new input
-                stockForm.querySelector('[name="quantity_adjustment"]').value = '';
-                stockForm.querySelector('[name="expiry_date"]').value = '';
-                
-                stockDrawer.style.display = 'block'; // Open drawer
-            });
-        });
-        
-        // 2. DELETE BUTTONS
-        document.querySelectorAll('.delete-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                const itemId = this.dataset.itemId;
-                if (confirm('Are you sure you want to delete this item? Stock must be zero.')) {
-                    deleteItem(itemId);
-                }
-            });
         });
     }
     
-    async function deleteItem(itemId) {
+    // --- D. SUBMISSION HANDLER ---
+
+    orderForm.addEventListener('submit', async function(event) {
+        event.preventDefault();
+
+        // 1. Collect line item data
+        const itemIds = Array.from(this.querySelectorAll('[name="item_id[]"]')).map(el => el.value);
+        const quantities = Array.from(this.querySelectorAll('[name="quantity[]"]')).map(el => el.value);
+        const prices = Array.from(this.querySelectorAll('[name="unit_price[]"]')).map(el => el.value);
+        const expiryDates = Array.from(this.querySelectorAll('[name="expiry_date[]"]')).map(el => el.value);
+
+        // Map data into the structure the OrderController@store expects
+        const items = itemIds.map((id, index) => ({
+            item_id: id,
+            quantity: parseFloat(quantities[index]),
+            unit_price: parseFloat(prices[index]),
+            expiry_date: orderTypeSelect.value === 'Supplier' ? expiryDates[index] : null,
+        }));
+        
+        const payload = {
+            _token: csrfToken,
+            order_type: orderTypeSelect.value,
+            supplier_id: orderTypeSelect.value === 'Supplier' ? supplierDropdownOrder.value : null,
+            order_status: 'Completed', 
+            items: items,
+        };
+        
+        // 2. Send to API
         try {
-            const response = await fetch(`/api/inventory/${itemId}`, {
-                method: 'DELETE',
+            // FIX: Use the clean, non-prefixed route for submission
+            const response = await fetch(API_ORDERS_STORE, { 
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': csrfToken, 
                 },
+                body: JSON.stringify(payload),
             });
             
             const result = await response.json();
-            
+
             if (response.ok) {
                 alert(result.message);
-                loadInitialData(); // Refresh the table
+                orderModal.style.display = 'none';
+                orderForm.reset();
+                loadInitialData(); // Refresh history table
             } else {
-                alert('Error: ' + (result.error || 'Failed to delete item.'));
+                const errorMsg = result.errors ? Object.values(result.errors).flat().join('\n') : (result.error || result.message || 'Failed to process order.');
+                alert('Error: ' + errorMsg);
             }
         } catch (error) {
-            console.error('Delete error:', error);
-            alert('An unexpected error occurred during deletion.');
+            console.error('Order submission error:', error);
+            alert('An unexpected network error occurred.');
         }
-    }
+    });
+
+    // --- E. INITIALIZATION AND EVENT LISTENERS ---
     
-    // --- INITIALIZATION ---
-    
-    // Event listener for the static "+ Add New Item" button (opens the drawer)
-    document.getElementById('add-item-button').addEventListener('click', () => {
-        // Clear item ID to ensure form is in CREATE mode
-        document.getElementById('form-item-id').value = ''; 
-        stockForm.reset();
-        stockDrawer.style.display = 'block'; 
+    document.getElementById('create-order-btn').addEventListener('click', () => {
+        itemRowsBody.innerHTML = ''; // Clear previous items
+        orderForm.reset();
+        addItemRow(); // Start with one line item
+        orderModal.style.display = 'block';
     });
     
+    document.getElementById('add-item-row-btn').addEventListener('click', addItemRow);
+    
+    orderTypeSelect.addEventListener('change', updateFormVisibility);
+
     loadInitialData();
 });
