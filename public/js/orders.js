@@ -18,9 +18,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- 3. CORE FUNCTIONS ---
 
-    /**
-     * Fetches all necessary data from the server on page load.
-     */
     async function loadInitialData() {
         try {
             const [ordersResponse, inventoryResponse, supplierResponse] = await Promise.all([
@@ -41,9 +38,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    /**
-     * Renders the main table of all orders.
-     */
     function renderOrdersTable(orders) {
         tableBody.innerHTML = '';
         if (!orders || orders.length === 0) {
@@ -74,9 +68,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    /**
-     * Fetches and displays details for a single order in a modal.
-     */
     async function fetchAndShowOrderDetails(orderId) {
         try {
             const response = await fetch(`/orders-data/${orderId}`);
@@ -139,13 +130,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const row = itemRowsBody.insertRow();
         row.id = rowId;
         
-        // --- THIS IS THE FIX ---
         const itemOptions = allInventory.map(item => 
             `<option value="${item.id}" data-unit="${item.unit}" data-price="${DEFAULT_PRICE}">
-                ${item.name} 
+                ${item.name}
             </option>`
         ).join('');
-        // --- END OF FIX ---
 
         row.innerHTML = `
             <td>
@@ -171,8 +160,6 @@ document.addEventListener('DOMContentLoaded', function() {
             el.style.display = isSupplierOrder ? 'table-cell' : 'none';
         });
     }
-
-    // --- 4. EVENT HANDLERS ---
 
     orderForm.addEventListener('submit', async function(event) {
         event.preventDefault();
@@ -248,6 +235,6 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('add-item-row-btn').addEventListener('click', addItemRow);
     orderTypeSelect.addEventListener('change', updateFormVisibility);
 
-    // --- 5. INITIALIZATION ---
     loadInitialData();
 });
+
