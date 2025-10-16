@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const supplierGroup = document.getElementById('supplier-select-group');
     const supplierDropdownOrder = document.getElementById('supplier-dropdown-order');
     const itemRowsBody = document.getElementById('order-item-rows');
-    const detailsModal = document.getElementById('order-details-modal'); // <-- New element for details
+    const detailsModal = document.getElementById('order-details-modal'); 
     const csrfToken = orderForm.querySelector('input[name="_token"]').value;
 
     // --- 2. GLOBAL STATE ---
@@ -65,12 +65,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 <td class="actions-cell" style="padding: 10px;"></td>
             `;
 
-            // Create and append the "View Details" button
             const detailsBtn = document.createElement('button');
             detailsBtn.textContent = 'Details';
             detailsBtn.className = 'view-details-btn';
             detailsBtn.style.cssText = 'padding: 5px 8px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer;';
-            detailsBtn.dataset.orderId = order.id; // Store the ID on the button
+            detailsBtn.dataset.orderId = order.id;
             row.querySelector('.actions-cell').appendChild(detailsBtn);
         });
     }
@@ -85,7 +84,6 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const order = await response.json();
             
-            // Populate modal fields
             document.getElementById('details-order-id').textContent = order.id;
             document.getElementById('details-order-type').textContent = order.order_type;
             document.getElementById('details-order-status').textContent = order.order_status;
@@ -125,9 +123,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    /**
-     * Populates the supplier dropdown in the create order form.
-     */
     function renderSupplierDropdowns() {
         supplierDropdownOrder.innerHTML = '<option value="">-- Select Supplier --</option>';
         allSuppliers.forEach(supplier => {
@@ -138,20 +133,19 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    /**
-     * Adds a new item row to the create order form.
-     */
     function addItemRow() {
         lineItemCounter++;
         const rowId = `line-item-${lineItemCounter}`;
         const row = itemRowsBody.insertRow();
         row.id = rowId;
         
+        // --- THIS IS THE FIX ---
         const itemOptions = allInventory.map(item => 
-            `<option value="${item.id}" data-unit="${item.unit_of_measure}" data-price="${DEFAULT_PRICE}">
-                ${item.item_name}
+            `<option value="${item.id}" data-unit="${item.unit}" data-price="${DEFAULT_PRICE}">
+                ${item.name} 
             </option>`
         ).join('');
+        // --- END OF FIX ---
 
         row.innerHTML = `
             <td>
@@ -170,9 +164,6 @@ document.addEventListener('DOMContentLoaded', function() {
         updateFormVisibility();
     }
 
-    /**
-     * Toggles visibility of supplier and expiry fields based on order type.
-     */
     function updateFormVisibility() {
         const isSupplierOrder = orderTypeSelect.value === 'Supplier';
         supplierGroup.style.display = isSupplierOrder ? 'block' : 'none';
@@ -183,7 +174,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- 4. EVENT HANDLERS ---
 
-    // Handle create order form submission
     orderForm.addEventListener('submit', async function(event) {
         event.preventDefault();
         const items = Array.from(this.querySelectorAll('#order-item-rows tr')).map(row => ({
@@ -226,19 +216,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Event Delegation for dynamic buttons (Details, Add/Remove Row)
     document.body.addEventListener('click', function(event) {
-        // View Details Button
         if (event.target.classList.contains('view-details-btn')) {
             fetchAndShowOrderDetails(event.target.dataset.orderId);
         }
-        // Remove Item Row Button
         if (event.target.classList.contains('remove-row-btn')) {
             event.target.closest('tr').remove();
         }
     });
     
-    // Auto-fill unit and price when an item is selected in the create form
     itemRowsBody.addEventListener('change', function(event) {
         if (event.target.classList.contains('item-select')) {
             const selectedOption = event.target.options[event.target.selectedIndex];
@@ -251,7 +237,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Show create order modal
     document.getElementById('create-order-btn').addEventListener('click', () => {
         itemRowsBody.innerHTML = '';
         orderForm.reset();
@@ -260,10 +245,7 @@ document.addEventListener('DOMContentLoaded', function() {
         orderModal.style.display = 'flex';
     });
 
-    // Add another item row
     document.getElementById('add-item-row-btn').addEventListener('click', addItemRow);
-
-    // Update form on order type change
     orderTypeSelect.addEventListener('change', updateFormVisibility);
 
     // --- 5. INITIALIZATION ---
