@@ -1,0 +1,278 @@
+/* --- orders.css --- */
+
+/* ======================================================= */
+/* 1. ORDERS MAIN LAYOUT */
+/* ======================================================= */
+
+.orders-main-grid {
+    display: grid;
+    grid-template-columns: 2.5fr 1.5fr; 
+    gap: 20px;
+    height: 100%;
+}
+
+.order-list-panel {
+    display: flex;
+    flex-direction: column;
+}
+
+.create-order-panel {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ======================================================= */
+/* 2. TABLE CONTROLS (SEARCH & FILTERS) */
+/* ======================================================= */
+
+.table-controls-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.search-bar.orders-search {
+    width: 300px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 15px;
+    border: 1px solid var(--color-light-grey-border);
+    border-radius: 8px;
+    background-color: var(--color-white);
+}
+
+.search-bar.orders-search input {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 14px;
+    flex-grow: 1;
+}
+
+.filter-group {
+    display: flex;
+    gap: 10px;
+}
+
+.form-select {
+    padding: 10px 15px;
+    border: 1px solid var(--color-light-grey-border);
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--color-text-dark);
+    background-color: var(--color-white);
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2365676b%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13%205.1L146.2%20208.7%2018.8%2074.5a17.6%2017.6%200%200%200-25.3%200%2017.6%2017.6%200%200%200%200%2025.3l130.4%20129.6c6.6%206.4%2017.3%206.4%2023.9%200l130.4-129.6a17.6%2017.6%200%200%200%200-25.3%2017.6%2017.6%200%200%200-11.3-4.9z%22%2F%3E%3C%2Fsvg%3E');
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 10px;
+    cursor: pointer;
+}
+
+/* ======================================================= */
+/* 3. ORDERS TABLE */
+/* ======================================================= */
+
+.orders-table-card {
+    padding: 0;
+    overflow-y: auto;
+}
+
+.orders-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    text-align: left;
+}
+
+.orders-table th, .orders-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid var(--color-light-grey-border);
+}
+
+.orders-table thead th {
+    font-weight: 600;
+    color: var(--color-primary);
+    background-color: var(--color-beige-card);
+    position: sticky;
+    top: 0;
+}
+
+.orders-table tbody tr:hover {
+    background-color: #f5f0ec;
+    cursor: pointer;
+}
+
+.orders-table .status-pending {
+    color: #e6b300;
+    font-weight: 600;
+}
+.orders-table .status-confirmed {
+    color: var(--color-status-active);
+    font-weight: 600;
+}
+.orders-table .status-delivered {
+    color: var(--color-primary);
+    font-weight: 600;
+}
+.orders-table .status-cancelled {
+    color: var(--color-status-inactive);
+    font-weight: 600;
+}
+
+/* ======================================================= */
+/* 4. CREATE ORDER FORM PANEL */
+/* ======================================================= */
+
+.create-order-card {
+    padding: 25px;
+    height: 100%; 
+    display: flex;
+    flex-direction: column;
+}
+
+.form-title {
+    color: var(--color-primary);
+    margin-bottom: 15px;
+    font-size: 18px;
+    border-bottom: 2px solid var(--color-light-grey-border);
+    padding-bottom: 10px;
+    flex-shrink: 0;
+}
+
+.order-type-tabs {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 20px;
+    flex-shrink: 0;
+}
+
+.order-tab {
+    padding: 8px 15px;
+    border: none;
+    background-color: var(--color-light-grey);
+    color: var(--color-secondary-grey);
+    cursor: pointer;
+    font-weight: 600;
+    border-radius: 6px;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.order-tab.active {
+    background-color: var(--color-primary);
+    color: var(--color-white);
+}
+
+.order-form-content {
+    flex-grow: 1; 
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    overflow-y: auto; 
+    padding-right: 5px;
+    padding-bottom: 15px;
+}
+
+.product-list-title {
+    color: var(--color-text-dark);
+    font-size: 15px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.form-input, .form-select {
+    padding: 10px 15px;
+    border: 1px solid var(--color-light-grey-border);
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--color-text-dark);
+    background-color: var(--color-white);
+}
+
+.form-input[disabled] {
+    background-color: var(--color-light-grey);
+    color: var(--color-secondary-grey);
+    cursor: not-allowed;
+}
+
+.form-textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.form-row-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.form-row-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.full-width {
+    width: 100%;
+}
+
+.confirm-btn {
+    margin-top: auto; 
+    padding: 12px 20px;
+    background-color: var(--color-primary);
+    color: var(--color-white);
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    font-size: 15px;
+    flex-shrink: 0;
+}
+
+.confirm-btn:hover {
+    background-color: var(--color-primary-dark);
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* ======================================================= */
+/* 5. RESPONSIVE ADJUSTMENTS */
+/* ======================================================= */
+
+@media (max-width: 1024px) {
+    .orders-main-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .order-list-panel {
+        order: 2;
+    }
+
+    .create-order-panel {
+        order: 1;
+    }
+}
+
+@media (max-width: 600px) {
+    .table-controls-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .search-bar.orders-search {
+        width: 100%;
+    }
+
+    .filter-group {
+        width: 100%;
+        justify-content: space-between;
+    }
+}

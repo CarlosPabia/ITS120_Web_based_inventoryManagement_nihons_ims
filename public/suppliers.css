@@ -1,0 +1,325 @@
+/* --- suppliers.css --- */
+
+/* ======================================================= */
+/* 1. LAYOUT */
+/* ======================================================= */
+
+.supplier-main-grid {
+    display: grid;
+    grid-template-columns: 3fr minmax(280px, 1fr); 
+    gap: 30px;
+}
+
+.supplier-list-panel {
+}
+
+.add-supplier-panel {
+}
+
+/* ======================================================= */
+/* 2. CONTROLS AND SEARCH */
+/* ======================================================= */
+
+.supplier-controls-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    gap: 20px;
+}
+
+.supplier-search {
+    flex-grow: 1; 
+    max-width: 500px;
+}
+
+.search-bar-inventory {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background-color: var(--color-white);
+    border: 1px solid var(--color-light-grey-border);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    padding: 0;
+    width: 100%;
+}
+
+.search-bar-inventory i {
+    color: var(--color-text-light);
+    margin-left: 15px;
+    font-size: 16px;
+}
+
+.search-bar-inventory input {
+    width: 100%;
+    padding: 12px 15px;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 16px;
+    color: var(--color-text-dark);
+}
+
+.add-supplier-header-btn {
+    background-color: var(--color-primary);
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.2s;
+    flex-shrink: 0; 
+}
+
+.add-supplier-header-btn:hover {
+    background-color: var(--color-primary-dark);
+}
+
+.add-supplier-header-btn i {
+    margin-right: 5px;
+}
+
+/* ======================================================= */
+/* 3. SUPPLIER CARDS */
+/* ======================================================= */
+
+.supplier-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.supplier-card {
+    padding: 20px;
+}
+
+.supplier-name {
+    font-size: 18px;
+    color: var(--color-primary-dark);
+    margin-bottom: 10px;
+    border-bottom: 1px solid var(--color-light-grey-border);
+    padding-bottom: 5px;
+}
+
+.supplier-card p {
+    font-size: 14px;
+    margin-bottom: 5px;
+    color: var(--color-text-light);
+}
+
+.supplier-card p strong {
+    color: var(--color-text-dark);
+    font-weight: 600;
+    display: inline-block;
+    min-width: 100px;
+}
+
+.status-active-text, .status-inactive-text {
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    margin-top: 10px;
+}
+
+.status-active-text {
+    color: var(--color-status-active) !important;
+}
+
+.status-inactive-text {
+    color: var(--color-status-inactive) !important;
+}
+
+.card-actions {
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid var(--color-light-grey-border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.edit-supplier-btn, .delete-supplier-btn {
+    padding: 8px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+
+.edit-supplier-btn {
+    background-color: var(--color-primary-light);
+    color: white;
+    border: none;
+}
+
+.edit-supplier-btn:hover {
+    background-color: var(--color-primary-dark);
+}
+
+.delete-supplier-btn {
+    background-color: var(--color-status-inactive);
+    color: white;
+    border: none;
+}
+
+.delete-supplier-btn:hover {
+    background-color: #c9302c;
+}
+
+.card-actions i {
+    margin-right: 5px;
+}
+
+/* ======================================================= */
+/* 4. ADD/EDIT FORM STYLES */
+/* ======================================================= */
+
+.form-title-small {
+    font-size: 18px;
+    color: var(--color-primary-dark);
+    font-weight: 700;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.supplier-form-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.supplier-form-fields label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text-dark);
+    margin-top: 5px;
+}
+
+.form-input-suppliers {
+    width: 100%;
+    padding: 10px 15px;
+    border: 1px solid var(--color-light-grey-border);
+    border-radius: 6px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.status-label {
+    margin-top: 15px;
+    text-align: center;
+}
+
+.status-toggle-group {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 20px;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0 10px;
+}
+
+.status-toggle-btn {
+    padding: 8px 10px;
+    border: 1px solid var(--color-light-grey-border);
+    background-color: var(--color-white);
+    color: var(--color-text-dark);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 14px;
+    
+    flex-grow: 1; 
+    flex-basis: 0;
+    max-width: calc(50% - 5px);
+    text-align: center;
+}
+
+.status-toggle-btn.active {
+    background-color: var(--color-primary);
+    color: var(--color-white);
+    border-color: var(--color-primary);
+}
+
+.add-supplier-confirm-btn, .save-edit-btn {
+    padding: 12px;
+    background-color: var(--color-primary);
+    color: var(--color-white);
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.add-supplier-confirm-btn:hover, .save-edit-btn:hover {
+    background-color: var(--color-primary-dark);
+}
+
+
+/* ======================================================= */
+/* 5. MODAL STYLES (Reused from Settings, adjusted for clarity) */
+/* ======================================================= */
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    padding: 30px;
+    border-radius: 12px;
+    max-width: 450px;
+    width: 90%;
+}
+
+.modal-content .form-title-small {
+    text-align: left;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--color-light-grey-border);
+    margin-bottom: 20px;
+}
+
+#edit-supplier-form-modal {
+    gap: 15px;
+}
+
+/* ======================================================= */
+/* 6. RESPONSIVENESS */
+/* ======================================================= */
+
+@media (max-width: 1024px) {
+    .supplier-main-grid {
+        grid-template-columns: 1fr;
+    }
+    .add-supplier-panel {
+        order: -1;
+    }
+}
+
+@media (max-width: 600px) {
+    .supplier-cards-grid {
+        grid-template-columns: 1fr;
+    }
+    .supplier-controls-row {
+        flex-direction: column;
+        gap: 15px;
+        align-items: stretch;
+    }
+    .supplier-search {
+        width: 100%;
+        max-width: none;
+    }
+    .add-supplier-header-btn {
+        width: 100%;
+    }
+}

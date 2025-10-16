@@ -1,0 +1,301 @@
+/* --- dashboard.css --- */
+
+/* =======================================================
+   1. DASHBOARD CONTROL BAR
+======================================================= */
+.dashboard-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.search-bar {
+    display: flex;
+    align-items: center;
+    background-color: var(--color-white);
+    padding: 10px 15px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    width: 450px; 
+    border: 1px solid var(--color-light-grey-border);
+}
+
+.search-bar i {
+    color: var(--color-secondary-grey);
+    margin-right: 10px;
+}
+
+.search-bar input {
+    border: none;
+    outline: none;
+    flex-grow: 1;
+    font-size: 15px;
+    background-color: transparent;
+}
+
+
+/* ======================================================= */
+/* 2. SUMMARY CARDS */
+/* ======================================================= */
+.summary-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.summary-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.summary-card .card-content {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 15px;
+    position: relative;
+}
+
+.summary-icon {
+    font-size: 36px;
+    color: var(--color-primary);
+    margin-right: 20px;
+    line-height: 1;
+}
+
+.summary-icon.alert {
+    color: #e6b300;
+}
+
+.summary-details {
+    flex-grow: 1;
+}
+
+.summary-details p {
+    margin: 2px 0;
+    color: var(--color-secondary-grey);
+    font-size: 14px;
+}
+
+.summary-details strong {
+    font-size: 24px;
+    color: var(--color-primary);
+}
+
+.review-btn {
+    background-color: var(--color-primary);
+    color: var(--color-white);
+    border: none;
+    padding: 8px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    align-self: flex-end;
+    text-decoration: none;
+    transition: background-color 0.2s;
+}
+
+.review-btn:hover {
+    background-color: var(--color-primary-light);
+}
+
+/* ======================================================= */
+/* 3. OVERVIEW GRIDS */
+/* ======================================================= */
+.dashboard-overview-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.inventory-overview-card {
+    grid-column: 1 / 2;
+    grid-row: 1 / 3;
+    display: flex;
+    flex-direction: column;
+}
+
+.sales-orders-overview-card {
+    grid-column: 2 / 3;
+    grid-row: 1 / 2;
+    display: flex;
+    flex-direction: column;
+}
+
+.top-selling-items-card {
+    grid-column: 2 / 3;
+    grid-row: 2 / 3;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.view-reports-link {
+    color: var(--color-secondary-grey);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.view-reports-link:hover {
+    text-decoration: underline;
+}
+
+.inventory-overview-content {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    flex-grow: 1;
+}
+
+.stock-list-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    flex: 2;
+}
+
+.stock-list-grid h4 {
+    grid-column: 1 / -1;
+    margin: 0 0 10px 0;
+}
+
+.stock-list-grid ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.stock-list-grid ul li {
+    font-size: 14px;
+    color: #555;
+    line-height: 1.8;
+}
+
+.bar-chart-container {
+    flex: 1;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-around;
+    width: 100%;
+    height: 150px;
+    background-color: var(--color-background);
+    border-radius: 8px;
+    padding: 10px;
+}
+
+.bar-chart-container .bar {
+    width: 20px;
+    background-color: var(--color-primary-light);
+    border-radius: 5px 5px 0 0;
+    transition: height 0.3s ease;
+}
+
+.sales-overview-content {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    align-items: center;
+    flex-grow: 1;
+}
+
+.sales-details-container {
+    flex: 1;
+}
+
+.sales-details-container p {
+    font-size: 14px;
+    margin: 4px 0;
+    color: #333;
+}
+
+.sales-details-container p strong {
+    font-weight: 600;
+    color: var(--color-primary);
+}
+
+.pie-chart-container {
+    flex: 0 0 120px;
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pie-chart-placeholder-actual {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: conic-gradient(
+        var(--color-primary) 0deg 120deg,
+        var(--color-primary-light) 120deg 250deg,
+        var(--color-secondary-grey) 250deg 360deg
+    );
+    border: 5px solid var(--color-background);
+    box-shadow: inset 0 0 0 3px var(--color-white);
+}
+
+.top-selling-items-card ul {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0 0 0;
+}
+
+.top-selling-items-card ul li {
+    font-size: 14px;
+    margin: 5px 0;
+    color: #333;
+    position: relative;
+    padding-left: 15px;
+}
+
+.top-selling-items-card ul li::before {
+    content: '•';
+    position: absolute;
+    left: 0;
+    color: var(--color-primary-light);
+    font-weight: bold;
+}
+
+/* =======================================================
+   4. GENERATE REPORT BUTTON STYLES (Centered/Shorter)
+ ======================================================= */
+
+.report-button-container {
+    display: flex; 
+    justify-content: center; 
+    margin-top: 30px; 
+    margin-bottom: 20px; 
+}
+
+.generate-report-btn {
+    display: block; 
+    text-decoration: none;
+    text-align: center;
+    cursor: pointer;
+    
+    width: 250px;
+    padding: 12px 20px; 
+    
+    background-color: var(--color-primary);
+    color: var(--color-white);
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.generate-report-btn:hover {
+    background-color: var(--color-primary-light);
+}

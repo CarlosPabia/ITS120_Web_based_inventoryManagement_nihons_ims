@@ -1,0 +1,177 @@
+/* --- inventory.css --- */
+
+/* ======================================================= */
+/* 1. INVENTORY CONTROL BAR */
+/* ======================================================= */
+
+.inventory-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.search-bar {
+    display: flex;
+    align-items: center;
+    background-color: var(--color-white);
+    padding: 10px 15px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    width: 350px;
+    border: 1px solid var(--color-light-grey-border);
+}
+
+.search-bar i {
+    color: var(--color-secondary-grey);
+    margin-right: 10px;
+}
+
+.search-bar input {
+    border: none;
+    outline: none;
+    flex-grow: 1;
+    font-size: 15px;
+    background-color: transparent;
+}
+
+.back-to-home-btn {
+    color: var(--color-primary);
+    border: 1px solid var(--color-primary);
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.back-to-home-btn:hover {
+    background-color: var(--color-primary-light);
+    color: var(--color-white);
+}
+
+/* ======================================================= */
+/* 2. INVENTORY TABLE */
+/* ======================================================= */
+
+.inventory-table-container {
+    padding: 0; 
+    overflow-x: auto;
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
+.inventory-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    text-align: left;
+}
+
+.inventory-table th, .inventory-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid var(--color-light-grey-border);
+}
+
+.inventory-table thead th {
+    font-weight: 600;
+    color: var(--color-primary);
+    background-color: var(--color-beige-card);
+    position: sticky;
+    top: 0;
+}
+
+.inventory-table tbody tr:hover {
+    background-color: #f5f0ec;
+}
+
+.status-critical {
+    color: var(--color-status-inactive);
+    font-weight: 600;
+}
+
+.status-low {
+    color: #e6b300;
+    font-weight: 600;
+}
+
+/* ======================================================= */
+/* 3. ACTION DROPDOWN STYLES (UPDATED) */
+/* ======================================================= */
+
+.action-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.action-dropdown-btn {
+    background-color: var(--color-primary);
+    color: var(--color-white);
+    border: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: background-color 0.2s;
+}
+
+.action-dropdown-btn.edit-button {
+    background-color: var(--color-status-edit);
+}
+
+.action-dropdown-btn:hover {
+    background-color: #1a8f9f; 
+}
+
+.dropdown-icon-small {
+    font-size: 10px;
+}
+
+.action-dropdown-content {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: var(--color-white);
+    min-width: 140px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    z-index: 50;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-top: 5px;
+    border: 1px solid var(--color-light-grey-border);
+}
+
+.action-dropdown-content.hidden {
+    display: none;
+}
+
+.dropdown-action-item {
+    color: var(--color-primary);
+    padding: 10px 15px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    transition: background-color 0.2s;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.dropdown-action-item:hover {
+    background-color: var(--color-background);
+}
+
+.dropdown-action-item.delete {
+    color: var(--color-status-inactive);
+}
+
+.dropdown-action-item.delete:hover {
+    background-color: #fce4e4;
+}
