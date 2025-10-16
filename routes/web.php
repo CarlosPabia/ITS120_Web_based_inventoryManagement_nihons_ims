@@ -41,36 +41,25 @@ Route::middleware(['auth'])->group(function () {
     // --- 3. Data API Endpoints (CLEAN, Non-Conflicting Data Routes) ---
     
     // Inventory API
-    // READ & CREATE/UPDATE are required by staff, so only 'auth' is needed.
     Route::get('inventory-data', [InventoryController::class, 'index'])->name('api.inventory.read');
     Route::post('inventory-data', [InventoryController::class, 'store'])->name('api.inventory.store');
-    // DELETE is Manager-Only
     Route::delete('inventory-data/{inventoryItem}', [InventoryController::class, 'destroy'])->name('api.inventory.delete')->middleware('role:Manager');
     
     // Order API
-    // READ & CREATE are required by staff, so only 'auth' is needed.
     Route::get('orders-data', [OrderController::class, 'index'])->name('api.orders.read');
     Route::post('orders-data', [OrderController::class, 'store'])->name('api.orders.store');
-    // UPDATE is managerial for processing status changes
-    Route::patch('orders-data/{order}', [OrderController::class, 'update'])->name('api.orders.update')->middleware('role:Manager'); 
+    Route::patch('orders-data/{order}', [OrderController::class, 'update'])->name('api.orders.update')->middleware('role:Manager');
+    Route::get('orders-data/{order}', [OrderController::class, 'show'])->name('api.orders.show'); // <-- THIS IS THE NEW ROUTE
     
    // --- SUPPLIER MANAGEMENT API (RBAC Manager-Only) ---
-    
-    // FIX: READ access must be open to all 'auth' users (Staff needs this for dropdowns).
     Route::get('suppliers-data', [SupplierController::class, 'index'])->name('api.suppliers.read'); 
-    
-    // CREATE/UPDATE/DELETE remain Manager-Only for security.
     Route::post('suppliers-data', [SupplierController::class, 'store'])->name('api.suppliers.store')->middleware('role:Manager');
     Route::patch('suppliers-data/{supplier}', [SupplierController::class, 'update'])->name('api.suppliers.update')->middleware('role:Manager');
     Route::delete('suppliers-data/{supplier}', [SupplierController::class, 'destroy'])->name('api.suppliers.delete')->middleware('role:Manager'); 
 
 
     // --- 5. Reports UI Links (RBAC enforced) ---
-    
-    // The UI link for the Suppliers page should still be Manager-Only
     Route::get('/suppliers', function () { return view('suppliers'); })->name('suppliers.index')->middleware('role:Manager'); 
-    
-    // Reports remains Manager-Only
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index')->middleware('role:Manager');
 });
 
