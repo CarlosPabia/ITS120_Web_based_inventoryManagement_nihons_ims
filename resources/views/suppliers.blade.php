@@ -2,47 +2,161 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Suppliers Directory - Nihon Café</title>
-    </head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suppliers - Nihon Café</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    
+    {{-- Use Laravel's asset() helper to generate correct paths to your CSS --}}
+    <link rel="stylesheet" href="{{ asset('main.css') }}"> 
+    <link rel="stylesheet" href="{{ asset('suppliers.css') }}">
+</head>
 <body>
-    <aside class="sidebar">
-            <div class="sidebar-logo">
-                <h2 style="margin: 0;">NIHON CAFE</h2>
-            </div>
-            <ul style="list-style: none; padding: 0;">
-                <li><a href="dashboard.blade.php" class="sidebar-nav-link active">Dashboard</a></li>
-                <li><a href="orders.blade.php" class="sidebar-nav-link">Orders</a></li>
-                <li><a href="inventory.blade.php" class="sidebar-nav-link">Inventory</a></li>
-                <li><a href="suppliers.blade.php" class="sidebar-nav-link">Suppliers</a></li>
-                <li><a href="reports.blade.php" class="sidebar-nav-link">Reports</a></li>
-                <li><a href="settings.html" class="sidebar-nav-link">Settings</a></li>
-            </ul>
-        </aside>
-    <div style="padding: 20px;">
-        <h1 style="color: #a03c3c;">Suppliers Directory (Manager Only)</h1>
-        <p style="color: red; font-weight: bold;">[ACCESS IS PROTECTED BY RBAC MIDDLEWARE]</p>
-
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
-            <input type="text" placeholder="Search Supplier Name or Contact" style="padding: 8px; width: 300px; border: 1px solid #ccc; border-radius: 4px;">
-            <button style="background-color: blue; color: white; padding: 10px 15px; border: none; border-radius: 4px;">+ Add New Supplier</button>
+    <nav class="navbar">
+        <div class="navbar-left">
+            {{-- Use asset() helper for images in the public folder --}}
+            <img src="{{ asset('image/logo.png') }}" alt="Nihon Cafe Logo" class="logo">
+            <span class="logo-text">NIHON CAFE</span>
         </div>
+        <div class="navbar-right">
+            <div class="user-dropdown">
+                <div class="user-profile-trigger">
+                    {{-- Dynamically display the logged-in user's name --}}
+                    <span class="profile-name">
+                        @auth {{ Auth::user()->first_name }} {{ Auth::user()->last_name }} @endauth
+                    </span>
+                    <i class="fas fa-chevron-down dropdown-icon"></i>
+                </div>
+                <div class="dropdown-content">
+                    {{-- Use a secure Laravel form for the logout action --}}
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="dropdown-item logout-btn-dropdown">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </nav>
 
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
-            <div style="background: white; padding: 15px; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                <h3>Japanese Coffee Wholesaler</h3>
-                <p>Contact: Mr. Sato</p>
-                <p>Email: sato@jcw.com</p>
-                <p>Status: Active</p>
-                <button>Edit Contact Info</button>
-            </div>
-            <div style="background: white; padding: 15px; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                <h3>Dairy Fresh PH</h3>
-                <p>Contact: Ms. Liza Reyes</p>
-                <p>Email: contact@dairyfresh.ph</p>
-                <p>Status: Active</p>
-                <button>Edit Contact Info</button>
-            </div>
+    <div class="app-container">
+        <nav id="sidebar" class="sidebar">
+            <div class="sidebar-header-placeholder"></div>
+            <ul class="nav-links">
+                {{-- These links now use the dynamic route() helper --}}
+                <li class="nav-item">
+                    <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                        <i class="fas fa-chart-line"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('orders.index') }}" class="nav-link {{ request()->routeIs('orders.index') ? 'active' : '' }}">
+                        <i class="fas fa-clipboard-list"></i> Orders
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('inventory.index') }}" class="nav-link {{ request()->routeIs('inventory.index') ? 'active' : '' }}">
+                        <i class="fas fa-boxes"></i> Inventory
+                    </a>
+                </li>
+                {{-- Blade directive to show links only to Managers --}}
+                @if(Auth::check() && Auth::user()->role->role_name == 'Manager')
+                <li class="nav-item">
+                    <a href="{{ route('suppliers.index') }}" class="nav-link {{ request()->routeIs('suppliers.index') ? 'active' : '' }}">
+                        <i class="fas fa-truck"></i> Suppliers
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('reports.index') }}" class="nav-link {{ request()->routeIs('reports.index') ? 'active' : '' }}">
+                        <i class="fas fa-file-alt"></i> Reports
+                    </a>
+                </li>
+                @endif
+                <li class="nav-item settings-separator">
+                    @if(Auth::check() && Auth::user()->role->role_name == 'Manager')
+                    <a href="{{ route('settings.index') }}" class="nav-link {{ request()->routeIs('settings.index') ? 'active' : '' }}">
+                        <i class="fas fa-cog"></i> Settings
+                    </a>
+                    @endif
+                </li>
+            </ul>
+        </nav>
+
+        <main class="content-area">
+            <header class="content-header">
+                <div class="page-title-block active">
+                    <h2>Supplier Management</h2>
+                </div>
+            </header>
+
+            <section id="suppliers-view" class="view supplier-main-grid">
+                <div class="supplier-list-panel">
+                    <div class="supplier-controls-row">
+                        <div class="search-bar-inventory supplier-search">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="supplier-search" placeholder="Search Supplier..." />
+                        </div>
+                        <button class="add-supplier-header-btn" id="add-supplier-btn-header">
+                            <i class="fas fa-plus"></i> Add
+                        </button>
+                    </div>
+                    {{-- This grid will be dynamically filled by JavaScript --}}
+                    <div class="supplier-cards-grid" id="supplier-cards-grid">
+                        <p>Loading suppliers...</p>
+                    </div>
+                </div>
+
+                <div class="add-supplier-panel">
+                    <div class="card add-supplier-card">
+                        <h3 class="form-title-small">Add New Supplier</h3>
+                        {{-- This form is for adding a NEW supplier --}}
+                        <form id="add-supplier-form" class="supplier-form-fields">
+                            @csrf {{-- Essential Laravel security token --}}
+                            <input type="text" name="supplier_name" placeholder="Supplier Name" class="form-input-suppliers" required/>
+                            <input type="text" name="contact_person" placeholder="Contact Person" class="form-input-suppliers" required/>
+                            <input type="email" name="email" placeholder="Email Address" class="form-input-suppliers" />
+                            <input type="tel" name="phone" placeholder="Phone Number" class="form-input-suppliers" />
+                            <input type="text" name="address" placeholder="Address" class="form-input-suppliers" />
+                            <button type="submit" class="add-supplier-confirm-btn">Add Supplier</button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+    
+    {{-- This is the EDIT modal that pops up --}}
+    <div id="edit-supplier-modal" class="modal-overlay hidden">
+        <div class="card modal-content">
+            <h3 class="form-title-small">Edit Supplier: <span id="modal-supplier-name"></span></h3>
+            <form id="edit-supplier-form-modal" class="supplier-form-fields">
+                @csrf
+                <input type="hidden" id="edit-supplier-id" name="id">
+                <label>Contact Person</label>
+                <input type="text" name="contact_person" class="form-input-suppliers" id="edit-contact-person"/>
+                <label>Email</label>
+                <input type="email" name="email" class="form-input-suppliers" id="edit-email"/>
+                <label>Phone</label>
+                <input type="tel" name="phone" class="form-input-suppliers" id="edit-phone"/>
+                <label>Address</label>
+                <input type="text" name="address" class="form-input-suppliers" id="edit-address"/>
+                <label class="status-label">Status</label>
+                <div class="status-toggle-group" id="modal-status-toggle">
+                    <button type="button" class="status-toggle-btn" data-status="1">Active</button> 
+                    <button type="button" class="status-toggle-btn" data-status="0">Inactive</button>
+                </div>
+                <input type="hidden" id="edit-is-active" name="is_active">
+                <div class="modal-actions">
+                     <button type="button" id="cancel-edit-btn" class="btn-secondary">Cancel</button>
+                     <button type="submit" class="save-edit-btn">Save Changes</button>
+                </div>
+            </form>
         </div>
     </div>
+
+    {{-- Link to the new, dedicated JavaScript file for this page --}}
+    <script src="{{ asset('js/suppliers.js') }}" defer></script>
+    <script src="{{ asset('.html/script_Front.js') }}" defer></script>
 </body>
 </html>
+
