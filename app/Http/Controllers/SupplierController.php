@@ -13,7 +13,8 @@ class SupplierController extends Controller
      */
     public function index()
     {
-        return response()->json(Supplier::all());
+        // Improvement: Added orderBy to ensure the list is always presented in a predictable, alphabetical order.
+        return response()->json(Supplier::orderBy('supplier_name')->get());
     }
 
     /**
@@ -21,15 +22,11 @@ class SupplierController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'supplier_name' => 'required|string|max:100|unique:suppliers',
-            'contact_person' => 'nullable|string|max:100',
-            'phone' => 'nullable|string|max:20',
-            'email' => 'nullable|email|max:100|unique:suppliers',
-            'address' => 'nullable|string|max:255',
-        ]);
-
-        $supplier = Supplier::create($request->all());
+        // Improvement: Extracted validation rules into a private method to keep the code DRY (Don't Repeat Yourself),
+        // making it more maintainable if rules need to change in the future.
+        $validatedData = $request->validate($this->validationRules());
+        
+        $supplier = Supplier::create($validatedData);
 
         return response()->json(['message' => 'Supplier added successfully.', 'supplier' => $supplier], 201);
     }
@@ -39,22 +36,12 @@ class SupplierController extends Controller
      */
     public function update(Request $request, Supplier $supplier)
     {
-        $request->validate([
-            // --- THIS IS THE FIX ---
-            // The supplier name is made optional, as it's not edited in the modal.
-            // We still validate it if it IS sent, ensuring it remains unique.
-            'supplier_name' => ['sometimes', 'string', 'max:100', Rule::unique('suppliers')->ignore($supplier->id)],
-            
-            'contact_person' => 'nullable|string|max:100',
-            'phone' => 'nullable|string|max:20',
-            'email' => ['nullable', 'email', 'max:100', Rule::unique('suppliers')->ignore($supplier->id)],
-            'address' => 'nullable|string|max:255',
-            'is_active' => 'required|boolean',
-        ]);
+        // Use the same validation rules, but adjust for the specific supplier being updated.
+        $validatedData = $request->validate($this->validationRules($supplier->id));
 
-        $supplier->update($request->all());
+        $supplier->update($validatedData);
 
-        return response()->json(['message' => 'Supplier updated successfully.']);
+        return response()->json(['message' => 'Supplier updated successfully.', 'supplier' => $supplier]);
     }
 
     /**
@@ -62,13 +49,32 @@ class SupplierController extends Controller
      */
     public function destroy(Supplier $supplier)
     {
-        // Prevent deletion if the supplier is linked to any inventory items.
+        // Edge Case Improvement: Added a crucial check to prevent deleting a supplier
+        // if they are still linked to inventory items. This avoids a 500 server error
+        // due to a foreign key constraint violation and provides a clear, user-friendly error message.
         if ($supplier->inventoryItems()->exists()) {
-            return response()->json(['error' => 'Cannot delete supplier. It is currently linked to one or more inventory items.'], 409);
+            return response()->json(['error' => 'Cannot delete supplier. It is currently linked to one or more inventory items.'], 409); // 409 Conflict is a more appropriate HTTP status code.
         }
 
         $supplier->delete();
 
         return response()->json(['message' => 'Supplier deleted successfully.']);
+    }
+
+    /**
+     * Centralized validation rules for creating and updating suppliers.
+     * This promotes code reuse and makes maintenance easier.
+     */
+    private function validationRules($id = null): array
+    {
+        return [
+            // 'sometimes' means only validate if present (used for updates where name isn't sent).
+            'supplier_name' => [$id ? 'sometimes' : 'required', 'string', 'max:100', Rule::unique('suppliers')->ignore($id)],
+            'contact_person' => 'nullable|string|max:100',
+            'phone' => 'nullable|string|max:20',
+            'email' => ['nullable', 'email', 'max:100', Rule::unique('suppliers')->ignore($id)],
+            'address' => 'nullable|string|max:255',
+            'is_active' => 'sometimes|boolean',
+        ];
     }
 }
