@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Nihon Café</title>
+    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="login.css">
+</head>
+<body>
+
+    <div class="login-page">
+        <header class="navbar">
+            <img src="/logo.png" alt="Nihon Cafe Logo" class="logo" />
+            <span class="logo-text">NIHON CAFE</span>
+        </header>
+
+        <main class="login-container">
+            <div class="login-box">
+                <h1 class="title">Nihon Café</h1>
+                <p class="subtitle">Inventory Management System</p>
+                
+                <input 
+                    type="email" 
+                    id="email-input" 
+                    placeholder="Email" 
+                    class="input"
+                    value=""
+                />
+                
+                <input 
+                    type="password" 
+                    id="password-input" 
+                    placeholder="Password" 
+                    class="input"
+                    value=""
+                />
+                
+                <button id="login-btn" class="login-btn">Login</button>
+
+                <a href="#" class="forgot-password">Forgot password?</a>
+                
+                <div class="security-message">
+                    <span class="security-icon">🔒</span>
+                    <span>All Records are AES-256 Encrypted.</span>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js" defer></script>
+</body>
+</html>

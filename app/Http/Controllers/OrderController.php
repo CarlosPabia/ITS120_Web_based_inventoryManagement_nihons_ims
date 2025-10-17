@@ -7,7 +7,7 @@ use App\Models\OrderItem;
 use App\Models\StockLevel;
 use App\Models\Supplier;
 use App\Models\User;
-use App\Models\InventoryItem; // <-- Added for Order Details
+use App\Models\InventoryItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -31,13 +31,7 @@ class OrderController extends Controller
      */
     public function show(Order $order)
     {
-        // Eager load all necessary relationships for the detail view
-        $orderDetails = $order->load([
-            'orderItems.inventoryItem', // Load items and their names
-            'user',                     // Load the user who created it
-            'supplier'                  // Load supplier info if it exists
-        ]);
-
+        $orderDetails = $order->load(['orderItems.inventoryItem', 'user', 'supplier']);
         return response()->json($orderDetails);
     }
 
@@ -58,7 +52,6 @@ class OrderController extends Controller
         ]);
         
         DB::beginTransaction();
-
         try {
             $order = Order::create([
                 'order_type' => $request->order_type,
@@ -90,31 +83,44 @@ class OrderController extends Controller
             }
 
             DB::commit();
-            return response()->json(['message' => 'Order created and inventory processed.', 'order' => $order], 201);
-
+            return response()->json(['message' => 'Order created successfully.', 'order' => $order], 201);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['error' => 'Failed to process order. Stock may be insufficient or a system error occurred.'], 500);
+            return response()->json(['error' => 'Failed to process order: ' . $e->getMessage()], 500);
         }
     }
 
     /**
-     * Placeholder for updating order status (e.g., 'Pending' to 'Completed').
+     * Handles the permanent deletion of an order for archival purposes.
+     * This action does NOT affect stock levels.
      */
-    public function update(Request $request, Order $order)
+    public function destroy(Order $order)
     {
-        return response()->json(['message' => 'Order status updated (placeholder).'], 200);
+        DB::beginTransaction();
+        try {
+            // --- THE FIX ---
+            // 1. Delete the child records (order items) first to satisfy foreign key constraints.
+            $order->orderItems()->delete();
+
+            // 2. Now, it is safe to delete the parent record (the order itself).
+            $order->delete();
+
+            DB::commit();
+            return response()->json(['message' => 'Order #' . $order->id . ' has been permanently deleted.']);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            // Log the actual error for debugging
+            \Log::error('Order Deletion Failed: ' . $e->getMessage());
+            return response()->json(['error' => 'A database error occurred while trying to delete the order.'], 500);
+        }
     }
     
-    // --- Helper Functions for Stock Manipulation ---
+    // --- Helper Functions ---
 
-    /**
-     * Deducts stock using a basic FIFO (First-In, First-Out) principle.
-     */
     protected function deductStock($itemId, $quantityToDeduct)
     {
         $remaining = $quantityToDeduct;
-        
         $batches = StockLevel::where('item_id', $itemId)
             ->where('quantity', '>', 0)
             ->orderBy('expiry_date', 'asc')
@@ -122,34 +128,26 @@ class OrderController extends Controller
 
         foreach ($batches as $batch) {
             if ($remaining <= 0) break;
-
-            if ($batch->quantity >= $remaining) {
-                $batch->quantity -= $remaining;
-                $remaining = 0;
-            } else {
-                $remaining -= $batch->quantity;
-                $batch->quantity = 0;
-            }
+            $deduct = min($remaining, $batch->quantity);
+            $batch->quantity -= $deduct;
+            $remaining -= $deduct;
             $batch->save();
         }
 
         if ($remaining > 0) {
-             throw new \Exception("Stockout detected: Not enough inventory for item ID $itemId.");
+             throw new \Exception("Stockout detected for item ID $itemId.");
         }
     }
 
-    /**
-     * Adds stock for a purchase order.
-     */
     protected function addStock($itemId, $quantityToAdd, $expiryDate)
     {
         $batch = StockLevel::firstOrNew([
             'item_id' => $itemId,
             'expiry_date' => $expiryDate, 
         ]);
-        
         $batch->quantity += $quantityToAdd;
         $batch->minimum_stock_threshold = $batch->minimum_stock_threshold > 0 ? $batch->minimum_stock_threshold : 10;
         $batch->save();
     }
 }
+

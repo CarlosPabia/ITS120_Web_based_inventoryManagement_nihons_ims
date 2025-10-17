@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - NIHON CAFE</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="main.css"> 
+    <link rel="stylesheet" href="dashboard.css"> 
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-left">
+            <img src="/logo.png" alt="Nihon Cafe Logo" class="logo">
+            <span class="logo-text">NIHON CAFE</span>
+        </div>
+        <div class="navbar-right">
+            <div class="user-dropdown">
+                <div class="user-profile-trigger">
+                    <img src="/user.png" alt="User Avatar" class="profile-avatar">
+                    <span class="profile-name">Peter Parks</span>
+                    <i class="fas fa-chevron-down dropdown-icon"></i>
+                </div>
+                <div class="dropdown-content">
+                    <a href="login.html" class="dropdown-item logout-btn-dropdown">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="app-container">
+        
+        <nav id="sidebar" class="sidebar">
+            <div class="sidebar-header-placeholder">
+            </div>
+            <ul class="nav-links">
+                <li class="nav-item sidebar-title-item">
+                    <a href="dashboard.html" class="nav-link active">
+                        <i class="fas fa-chart-line"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="orders.html" class="nav-link">
+                        <i class="fas fa-clipboard-list"></i> Orders
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="inventory.html" class="nav-link">
+                        <i class="fas fa-boxes"></i> Inventory
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="suppliers.html" class="nav-link">
+                        <i class="fas fa-truck"></i> Suppliers
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="reports.html" class="nav-link">
+                        <i class="fas fa-file-alt"></i> Reports
+                    </a>
+                </li>
+                <li class="nav-item settings-separator">
+                    <a href="settings.html" class="nav-link">
+                        <i class="fas fa-cog"></i> Settings
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <main class="content-area dashboard-page">
+            <header class="content-header dashboard-header">
+                <div class="dashboard-title-box">Dashboard</div>
+            </header>
+            
+            <div class="dashboard-search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search Inventory, Orders, or Suppliers..." class="search-input">
+                <a href="settings.html#access-control" class="access-security-link">
+                    <i class="fas fa-lock"></i> Access & Security
+                </a>
+            </div>
+
+            <section class="dashboard-grid-1">
+                <div class="card summary-box inventory-summary-card">
+                    <button class="close-btn"><i class="fas fa-times"></i></button>
+                    <h4>Inventory Summary</h4>
+                    <div class="summary-content">
+                        <span class="main-metric" id="inventoryTotalItems">0</span> 
+                        <div class="sub-metric">
+                            <p class="sub-metric-value">Total Value:</p>
+                            <p class="sub-metric-label" id="inventoryTotalValue">$0.00</p>
+                        </div>
+                        <p class="sub-metric-label" id="inventoryItemCount">0 Items</p>
+                    </div>
+                    <a href="inventory.html" class="review-btn">Review</a>
+                </div>
+
+                <div class="card summary-box low-stock-card">
+                    <button class="close-btn"><i class="fas fa-times"></i></button>
+                    <h4>Low Stock Items</h4>
+                    <div class="summary-content">
+                        <i class="fas fa-exclamation-triangle warning-icon"></i>
+                        <span class="main-metric" id="lowStockCount">0</span> 
+                        <div class="sub-metric">
+                            <p class="sub-metric-value">Total Value:</p>
+                            <p class="sub-metric-label" id="lowStockTotalValue">$0.00</p>
+                        </div>
+                        <p class="sub-metric-label" id="lowStockItemCount">0 Items</p>
+                    </div>
+                    <a href="inventory.html" class="review-btn">Review</a>
+                </div>
+
+                <div class="card summary-box pending-orders-card">
+                    <button class="close-btn"><i class="fas fa-times"></i></button>
+                    <h4>Pending Orders</h4>
+                    <div class="summary-content">
+                        <i class="fas fa-box-open order-icon"></i>
+                        <span class="main-metric" id="pendingOrdersCount">0</span> 
+                        <p class="sub-metric-label" id="pendingOrdersText">0 orders pending</p>
+                    </div>
+                    <a href="orders.html" class="review-btn">Review</a>
+                </div>
+            </section>
+            
+            <section class="dashboard-grid-2">
+                
+                <div class="card inventory-overview-card">
+                    <div class="card-header">
+                        <h3>Inventory Overview</h3>
+                        <a href="reports.html#inventory" class="view-reports-link">View Reports</a>
+                    </div>
+                    <div class="inventory-content-grid">
+                        <div class="available-stocks">
+                            <p class="list-title">Available Stocks</p>
+                            <ul class="stock-list" id="availableStockList">
+                                </ul>
+                        </div>
+                        <div class="inventory-chart-placeholder">
+                            <div class="bar-set">
+                                <div class="bar" style="height: 60%;"></div>
+                                <div class="bar" style="height: 40%;"></div>
+                                <div class="bar" style="height: 80%;"></div>
+                                <div class="bar" style="height: 30%;"></div>
+                            </div>
+                            <div class="bar-set">
+                                <div class="bar" style="height: 75%;"></div>
+                                <div class="bar" style="height: 50%;"></div>
+                                <div class="bar" style="height: 90%;"></div>
+                                <div class="bar" style="height: 25%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card sales-overview-card">
+                    <div class="card-header">
+                        <h3>Sales & Orders Overview</h3>
+                        <a href="reports.html#sales" class="view-reports-link">View Reports</a>
+                    </div>
+                    
+                    <div class="summary-details-grid">
+                        <div class="weekly-monthly-summary">
+                            <p class="list-title">Weekly / Monthly Summary</p>
+                            <ul class="summary-list">
+                                <li>Total Orders (week): <span id="totalOrdersWeek">0</span></li>
+                                <li>Total Sales (week): <span id="totalSalesWeek">$0.00</span></li>
+                                <li>Completed Orders (week): <span id="completedOrdersWeek">0</span></li>
+                                <li class="separator"></li>
+                                <li>Total Orders (month): <span id="totalOrdersMonth">0</span></li>
+                                <li>Total Sales (month): <span id="totalSalesMonth">$0.00</span></li>
+                                <li>Completed Orders (month): <span id="completedOrdersMonth">0</span></li>
+                            </ul>
+                        </div>
+                        <div class="sales-chart-placeholder">
+                            <div class="pie-chart-mock"></div>
+                        </div>
+                    </div>
+
+                    <div class="top-selling-items">
+                        <p class="list-title">Top 3 Selling Items</p>
+                        <ul class="selling-list" id="topSellingList">
+                            </ul>
+                    </div>
+                </div>
+            </section>
+
+            <div class="generate-report-container">
+                <button class="generate-report-btn">Generate Report</button>
+            </div>
+            
+        </main>
+    </div>
+<script>
+    (function() {
+        
+        const INVENTORY_KEY = 'NIHON_CAFE_INVENTORY';
+        const ORDERS_KEY = 'NIHON_CAFE_ORDERS';
+
+        let INVENTORY_DATA = [];
+        let ORDERS_DATA = [];
+
+        function fetchLatestData() {
+            const storedInventory = localStorage.getItem(INVENTORY_KEY);
+            if (storedInventory) {
+                INVENTORY_DATA = JSON.parse(storedInventory);
+            } else {
+                console.warn("No Inventory data found in localStorage. Using empty array.");
+            }
+
+            const storedOrders = localStorage.getItem(ORDERS_KEY);
+            if (storedOrders) {
+                ORDERS_DATA = JSON.parse(storedOrders);
+            } else {
+                console.warn("No Orders data found in localStorage. Using empty array.");
+            }
+        }
+        
+        const REPORTS_DATA = {
+            totalOrdersWeek: 128, totalSalesWeek: 68450.00, completedOrdersWeek: 120,
+            totalOrdersMonth: 540, totalSalesMonth: 420300.00, completedOrdersMonth: 522,
+            topSellingItems: ['Caffe Latte','Matcha Latte','Croissant']
+        };
+
+        function calculateTotalValue(data) {
+            return data.reduce((sum, item) => sum + (item.quantity * item.unitValue), 0);
+        }
+
+        function formatCurrency(amount) {
+            return '₱' + amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+        
+        function getAvailableStockNames(data) {
+            return data
+                .filter(item => item.status !== 'Critical') 
+                .map(item => item.name)
+                .slice(0, 20); 
+        }
+        
+
+        function populateSummaryBoxes() {
+            
+            const totalItemsQty = INVENTORY_DATA.reduce((sum, item) => sum + (item.quantity || 0), 0);
+            const totalItemTypes = INVENTORY_DATA.length;
+            const totalValueMock = totalItemsQty * 10; 
+            
+            document.getElementById('inventoryTotalItems').textContent = totalItemsQty; 
+            document.getElementById('inventoryTotalValue').textContent = formatCurrency(totalValueMock);
+            document.getElementById('inventoryItemCount').textContent = `${totalItemTypes} Items`; 
+
+
+            const lowStockItems = INVENTORY_DATA.filter(item => item.status === 'Critical' || item.status === 'Low');
+            const lowStockCount = lowStockItems.length;
+            const lowStockTotalValueMock = lowStockItems.length * 10;
+
+            document.getElementById('lowStockCount').textContent = lowStockCount;
+            document.getElementById('lowStockTotalValue').textContent = formatCurrency(lowStockTotalValueMock);
+            document.getElementById('lowStockItemCount').textContent = `${lowStockCount} Items`;
+
+
+            const pendingOrders = ORDERS_DATA.filter(order => order.status === 'Pending').length;
+            
+            document.getElementById('pendingOrdersCount').textContent = pendingOrders;
+            document.getElementById('pendingOrdersText').textContent = `${pendingOrders} orders pending`;
+        }
+
+
+        function populateInventoryOverview() {
+            const stockList = document.getElementById('availableStockList');
+            stockList.innerHTML = '';
+            
+            const stockNames = getAvailableStockNames(INVENTORY_DATA);
+            
+            const column1 = stockNames.slice(0, Math.ceil(stockNames.length / 2));
+            const column2 = stockNames.slice(Math.ceil(stockNames.length / 2));
+
+            function createColumnHTML(items) {
+                return items.map(name => `<li>${name}</li>`).join('');
+            }
+            
+            stockList.innerHTML = `
+                <div class="col-1">
+                    ${createColumnHTML(column1)}
+                </div>
+                <div class="col-2">
+                    ${createColumnHTML(column2)}
+                </div>
+            `;
+        }
+
+
+        function populateSalesOverview() {
+            document.getElementById('totalOrdersWeek').textContent = REPORTS_DATA.totalOrdersWeek;
+            document.getElementById('totalSalesWeek').textContent = formatCurrency(REPORTS_DATA.totalSalesWeek);
+            document.getElementById('completedOrdersWeek').textContent = REPORTS_DATA.completedOrdersWeek;
+            
+            document.getElementById('totalOrdersMonth').textContent = REPORTS_DATA.totalOrdersMonth;
+            document.getElementById('totalSalesMonth').textContent = formatCurrency(REPORTS_DATA.totalSalesMonth);
+            document.getElementById('completedOrdersMonth').textContent = REPORTS_DATA.completedOrdersMonth;
+            
+            const topSellingList = document.getElementById('topSellingList');
+            topSellingList.innerHTML = REPORTS_DATA.topSellingItems
+                .map(item => `<li>• ${item}</li>`)
+                .join('');
+        }
+        
+        function setupCloseButtons() {
+            const closeButtons = document.querySelectorAll('.close-btn');
+
+            closeButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const cardToClose = this.closest('.summary-box');
+                    
+                    if (cardToClose) {
+                        cardToClose.style.display = 'none';
+                    }
+                });
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchLatestData(); 
+
+            populateSummaryBoxes();
+            populateInventoryOverview();
+            populateSalesOverview();
+            
+            const generateReportBtn = document.querySelector('.generate-report-btn');
+            if (generateReportBtn) {
+                generateReportBtn.addEventListener('click', function() {
+                    window.location.href = 'reports.html';
+                });
+            }
+
+            setupCloseButtons(); 
+        });
+    })();
+</script>
+</body>
+</html>

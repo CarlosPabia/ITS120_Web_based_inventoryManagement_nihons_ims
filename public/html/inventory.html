@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory - Nihon Café</title>
+    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="inventory.css"> 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="navbar-left">
+            <img src="/logo.png" alt="Nihon Cafe Logo" class="logo">
+            <span class="logo-text">NIHON CAFE</span>
+        </div>
+        <div class="navbar-right">
+            <div class="user-dropdown">
+                <div class="user-profile-trigger">
+                    <img src="/user.png" alt="User Avatar" class="profile-avatar">
+                    <span class="profile-name">Peter Parks</span>
+                    <i class="fas fa-chevron-down dropdown-icon"></i>
+                </div>
+                <div class="dropdown-content">
+                    <a href="login.html" class="dropdown-item logout-btn-dropdown">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="app-container">
+        
+        <nav id="sidebar" class="sidebar">
+            <div class="sidebar-header-placeholder">
+            </div>
+            <ul class="nav-links">
+                <li class="nav-item">
+                    <a href="dashboard.html" class="nav-link">
+                        <i class="fas fa-chart-line"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="orders.html" class="nav-link">
+                        <i class="fas fa-shopping-cart"></i> Orders
+                    </a>
+                </li>
+                <li class="nav-item sidebar-title-item">
+                    <a href="inventory.html" class="nav-link active">
+                        <i class="fas fa-boxes"></i> Inventory
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="suppliers.html" class="nav-link">
+                        <i class="fas fa-truck"></i> Suppliers
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="reports.html" class="nav-link">
+                        <i class="fas fa-file-alt"></i> Reports
+                    </a>
+                </li>
+                <li class="nav-item settings-separator">
+                    <a href="settings.html" class="nav-link">
+                        <i class="fas fa-cog"></i> Settings
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <main class="content-area">
+            <div class="inventory-controls">
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Search inventory...">
+                </div>
+                <a href="dashboard.html" class="security-btn">Back to Home</a> 
+            </div>
+
+            <div class="inventory-table-container card">
+                <table class="inventory-table">
+                    <thead>
+                        <tr>
+                            <th>SKU / ID</th>
+                            <th>Item Name</th>
+                            <th>Quantity in Stock</th>
+                            <th>Unit</th>
+                            <th>Expiry Date</th>
+                            <th>Supplier</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventoryTableBody">
+                        </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const INVENTORY_KEY = 'NIHON_CAFE_INVENTORY';
+            
+            const defaultInventoryData = [
+                { sku: 'INV-001', name: 'Matcha Powder', quantity: 4, unit: 'kg', expiry: '09/28/2025', supplier: 'Kyoto Imports', status: 'Low' },
+                { sku: 'INV-002', name: 'Fresh Milk', quantity: 8, unit: 'L', expiry: '09/25/2025', supplier: 'DairyPure Co.', status: 'Low' },
+                { sku: 'INV-003', name: 'Soy Milk', quantity: 2, unit: 'L', expiry: '09/24/2025', supplier: 'Healthy Choice', status: 'Critical' },
+                { sku: 'INV-004', name: 'Whipped Cream', quantity: 1, unit: 'bottle', expiry: '09/23/2025', supplier: 'SweetDairy Ltd.', status: 'Critical' },
+                { sku: 'INV-005', name: 'Sandwich Bread', quantity: 6, unit: 'loaves', expiry: '10/12/2025', supplier: 'BakeHouse Corp.', status: 'Low' },
+                { sku: 'INV-006', name: 'Cheesecake', quantity: 15, unit: 'pcs', expiry: '01/15/2026', supplier: 'Parisian Bakery', status: 'In Stock' },
+                { sku: 'INV-007', name: 'Green Tea Leaves', quantity: 7, unit: 'kg', expiry: '11/15/2025', supplier: 'Kyoto Imports', status: 'In Stock' },
+                { sku: 'INV-008', name: 'Strawberry Syrup', quantity: 3, unit: 'bottles', expiry: '09/27/2025', supplier: 'Dessert Factory', status: 'Critical' },
+                { sku: 'INV-009', name: 'Vanilla Extract', quantity: 12, unit: 'bottle', expiry: '06/20/2026', supplier: 'SweetTreats Co.', status: 'In Stock' },
+                { sku: 'INV-010', name: 'Blueberry Muffins', quantity: 8, unit: 'pcs', expiry: '05/15/2026', supplier: 'SweetTreats Co.', status: 'In Stock' },
+            ];
+
+            function loadInventoryData() {
+                const storedData = localStorage.getItem(INVENTORY_KEY);
+                if (storedData) {
+                    return JSON.parse(storedData);
+                }
+                saveInventoryData(defaultInventoryData);
+                return defaultInventoryData;
+            }
+
+            function saveInventoryData(data) {
+                localStorage.setItem(INVENTORY_KEY, JSON.stringify(data));
+                console.log("Inventory updated and saved. Metrics will update on Dashboard refresh.");
+            }
+            
+            let inventoryData = loadInventoryData();
+            
+            const tableBody = document.getElementById('inventoryTableBody');
+            const searchInput = document.getElementById('searchInput');
+            
+            function getStatusClass(status) {
+                switch (status) {
+                    case 'Critical': return 'status-critical';
+                    case 'Low': return 'status-low';
+                    case 'In Stock': return 'status-active';
+                    default: return ''; 
+                }
+            }
+
+            function attachActionDropdownListeners() {
+                const actionDropdowns = document.querySelectorAll('.action-dropdown');
+                actionDropdowns.forEach(dropdown => {
+                    const button = dropdown.querySelector('.action-dropdown-btn');
+                    const content = dropdown.querySelector('.action-dropdown-content');
+
+                    const newButton = button.cloneNode(true);
+                    button.parentNode.replaceChild(newButton, button);
+                    
+                    newButton.onclick = function(event) { 
+                        event.stopPropagation();
+                        document.querySelectorAll('.action-dropdown-content').forEach(otherContent => {
+                            if (otherContent !== content) {
+                                otherContent.classList.add('hidden');
+                            }
+                        });
+                        content.classList.toggle('hidden');
+                    };
+                });
+            }
+            
+            function attachActionItemListeners() {
+                document.querySelectorAll('.dropdown-action-item').forEach(item => {
+                    const newItem = item.cloneNode(true);
+                    item.parentNode.replaceChild(newItem, item);
+
+                    newItem.onclick = function(e) { 
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const sku = this.getAttribute('data-sku');
+                        const action = this.classList.contains('delete') ? 'Delete' : 'Edit';
+
+                        if (action === 'Delete') {
+                            if (confirm(`Are you sure you want to delete item ${sku}? This action cannot be undone.`)) {
+                                const index = inventoryData.findIndex(item => item.sku === sku);
+                                if (index > -1) {
+                                    inventoryData.splice(index, 1);
+                                    
+                                    saveInventoryData(inventoryData); 
+                                    
+                                    renderTable(inventoryData);
+                                }
+                            }
+                        } else if (action === 'Edit') {
+                            alert(`Simulating opening Edit form for item: ${sku}. Saving changes would also update localStorage.`);
+                        }
+
+                        this.closest('.action-dropdown-content').classList.add('hidden');
+                    };
+                });
+            }
+
+            function renderTable(items) {
+                tableBody.innerHTML = ''; 
+                
+                if (items.length === 0) {
+                    const noResultsRow = tableBody.insertRow();
+                    noResultsRow.innerHTML = `<td colspan="8" style="text-align: center; padding: 20px; color: var(--color-secondary-grey);">No inventory items found.</td>`;
+                    return;
+                }
+
+                items.forEach(item => {
+                    const row = tableBody.insertRow();
+                    const statusClass = getStatusClass(item.status);
+
+                    row.innerHTML = `
+                        <td>${item.sku}</td>
+                        <td>${item.name}</td>
+                        <td>${item.quantity}</td>
+                        <td>${item.unit}</td>
+                        <td>${item.expiry}</td>
+                        <td>${item.supplier}</td>
+                        <td><span class="${statusClass}">${item.status}</span></td>
+                        <td>
+                            <div class="action-dropdown">
+                                <button class="action-dropdown-btn edit-button">
+                                    Edit <i class="fas fa-chevron-down dropdown-icon-small"></i>
+                                </button>
+                                <div class="action-dropdown-content hidden">
+                                    <a href="#" class="dropdown-action-item edit-item" data-sku="${item.sku}"><i class="fas fa-edit"></i> Edit Details</a>
+                                    <a href="#" class="dropdown-action-item delete" data-sku="${item.sku}"><i class="fas fa-trash"></i> Delete</a>
+                                </div>
+                            </div>
+                        </td>
+                    `;
+                });
+
+                attachActionDropdownListeners();
+                attachActionItemListeners();
+            }
+
+            function filterInventory() {
+                const searchTerm = searchInput.value.toLowerCase().trim();
+                const filteredItems = inventoryData.filter(item => {
+                    return item.name.toLowerCase().includes(searchTerm) ||
+                        item.sku.toLowerCase().includes(searchTerm) ||
+                        item.supplier.toLowerCase().includes(searchTerm);
+                });
+                renderTable(filteredItems);
+            }
+
+            const userDropdown = document.querySelector('.user-dropdown');
+            const dropdownContent = userDropdown.querySelector('.dropdown-content');
+
+            userDropdown.addEventListener('click', function(event) {
+                event.stopPropagation();
+                dropdownContent.classList.toggle('show');
+            });
+
+            window.addEventListener('click', function(event) {
+                if (!userDropdown.contains(event.target)) {
+                    dropdownContent.classList.remove('show');
+                }
+                document.querySelectorAll('.action-dropdown-content').forEach(content => {
+                    content.classList.add('hidden');
+                });
+            });
+
+            searchInput.addEventListener('input', filterInventory);
+            
+            renderTable(inventoryData);
+        });
+    </script>
+    </body>
+</html>

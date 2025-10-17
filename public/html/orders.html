@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orders - Nihon Café</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="main.css"> 
+    <link rel="stylesheet" href="orders.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-left">
+            <img src="/logo.png" alt="Nihon Cafe Logo" class="logo">
+            <span class="logo-text">NIHON CAFE</span>
+        </div>
+        <div class="navbar-right">
+            <div class="user-dropdown">
+                <div class="user-profile-trigger">
+                    <img src="/user.png" alt="User Avatar" class="profile-avatar">
+                    <span class="profile-name">Peter Parks</span>
+                    <i class="fas fa-chevron-down dropdown-icon"></i>
+                </div>
+                <div class="dropdown-content">
+                    <a href="login.html" class="dropdown-item logout-btn-dropdown">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="app-container">
+        
+        <nav id="sidebar" class="sidebar">
+            <div class="sidebar-header-placeholder">
+            </div>
+            <ul class="nav-links">
+                <li class="nav-item">
+                    <a href="dashboard.html" class="nav-link">
+                        <i class="fas fa-chart-line"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item sidebar-title-item">
+                    <a href="orders.html" class="nav-link active">
+                        <i class="fas fa-clipboard-list"></i> Orders
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="inventory.html" class="nav-link">
+                        <i class="fas fa-boxes"></i> Inventory
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="suppliers.html" class="nav-link">
+                        <i class="fas fa-truck"></i> Suppliers
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="reports.html" class="nav-link">
+                        <i class="fas fa-file-alt"></i> Reports
+                    </a>
+                </li>
+                <li class="nav-item settings-separator">
+                    <a href="settings.html" class="nav-link">
+                        <i class="fas fa-cog"></i> Settings
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <main class="content-area">
+            
+            <header class="content-header">
+                   <div class="page-title-block active">
+                        <h2>Orders</h2>
+                   </div>
+            </header>
+
+            <section id="orders-view" class="view orders-main-grid">
+                
+                <div class="order-list-panel">
+                    <div class="table-controls-row">
+                        <div class="search-bar orders-search">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="searchInput" placeholder="Search orders by ID or name..." />
+                        </div>
+                        <div class="filter-group">
+                            <select id="typeFilter" class="order-date-select form-select">
+                                <option value="All">All Types</option>
+                                <option value="Supplier">Supplier</option>
+                                <option value="Customer">Customer</option>
+                            </select>
+                            <select id="statusFilter" class="order-status-select form-select">
+                                <option value="All">All Statuses</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Confirmed">Confirmed</option>
+                                <option value="Delivered">Delivered</option>
+                                <option value="Cancelled">Cancelled</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="card orders-table-card">
+                        <table class="data-table orders-table">
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Type</th>
+                                    <th>Supplier/Customer</th>
+                                    <th>Status</th>
+                                    <th>Order Date</th>
+                                    <th>Expected Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ordersTableBody">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="create-order-panel">
+                    <div class="card create-order-card">
+                        <h3 class="form-title">Create Order</h3>
+                        
+                        <div class="order-type-tabs">
+                            <button class="order-tab active" data-form="supplier">Supplier</button>
+                            <button class="order-tab" data-form="customer">Customer</button>
+                        </div>
+
+                        <div id="supplier-form" class="order-form-content">
+                            <select class="form-select full-width" placeholder="Supplier">
+                                <option value="" disabled selected>Select Supplier</option>
+                                <option value="coffee">Coffee Roasters</option>
+                                <option value="dairy">Dairy Collective</option>
+                                <option value="hokkaido">Hokkaido Fresh Produce</option>
+                            </select>
+                            
+                            <h4 class="product-list-title">Product List</h4>
+                            
+                            <div class="form-row-grid">
+                                <input type="text" placeholder="Item Name" class="form-input" />
+                            </div>
+                            <div class="form-row-grid">
+                                <input type="number" placeholder="Quantity" class="form-input" />
+                                <input type="text" placeholder="Unit" class="form-input" />
+                            </div>
+                            <div class="form-row-grid">
+                                <input type="text" placeholder="Order ID" class="form-input" value="ORD-1008" disabled />
+                                <input type="date" class="form-input" value="2025-09-24" />
+                            </div>
+
+                            <button class="confirm-btn">Confirm Supplier Order</button>
+                        </div>
+
+                        <div id="customer-form" class="order-form-content hidden">
+                            <div class="form-row-grid-2">
+                                <input type="text" placeholder="Order ID" class="form-input" value="ORD-1008" disabled/>
+                                <input type="date" class="form-input" value="2025-09-24"/>
+                            </div>
+                            
+                            <input type="text" placeholder="Customer Name" class="form-input full-width" />
+                            <input type="text" placeholder="Category" class="form-input full-width" />
+                            <textarea placeholder="Order Details" class="form-input full-width form-textarea"></textarea>
+
+                            <div class="form-row-grid-2">
+                                <input type="text" placeholder="Total Amount" class="form-input" />
+                                <input type="text" placeholder="Sales Channel (e.g., App, In-Store)" class="form-input" />
+                            </div>
+
+                            <button class="confirm-btn">Confirm Customer Order</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const ordersData = [
+                { id: 'ORD-1007', type: 'Supplier', party: 'Coffee Roasters', status: 'Pending', orderDate: '2025-09-07', expectedDate: '2025-09-11' },
+                { id: 'ORD-1006', type: 'Customer', party: 'Czarine Macoto', status: 'Confirmed', orderDate: '2025-09-06', expectedDate: '2025-09-06' },
+                { id: 'ORD-1005', type: 'Supplier', party: 'Hokkaido Fresh Produce', status: 'Delivered', orderDate: '2025-09-05', expectedDate: '2025-09-07' },
+                { id: 'ORD-1004', type: 'Customer', party: 'Keira Sioco', status: 'Cancelled', orderDate: '2025-09-04', expectedDate: '2025-09-04' },
+                { id: 'ORD-1003', type: 'Supplier', party: 'Dairy Collective', status: 'Pending', orderDate: '2025-09-03', expectedDate: '2025-09-06' },
+                { id: 'ORD-1002', type: 'Customer', party: 'Reccan Hatamosa', status: 'Confirmed', orderDate: '2025-09-02', expectedDate: '2025-09-02' },
+                { id: 'ORD-1001', type: 'Supplier', party: 'Kobe Seafood Market', status: 'Confirmed', orderDate: '2025-09-01', expectedDate: '2025-09-05' },
+                { id: 'ORD-1000', type: 'Customer', party: 'Alex Rivera', status: 'Delivered', orderDate: '2025-08-31', expectedDate: '2025-08-31' },
+            ];
+
+            const tableBody = document.getElementById('ordersTableBody');
+            const searchInput = document.getElementById('searchInput');
+            const typeFilter = document.getElementById('typeFilter');
+            const statusFilter = document.getElementById('statusFilter');
+            const tabs = document.querySelectorAll('.order-tab');
+            const formContents = document.querySelectorAll('.order-form-content');
+
+            function getStatusClass(status) {
+                switch (status) {
+                    case 'Pending':
+                        return 'status-pending';
+                    case 'Confirmed':
+                        return 'status-confirmed';
+                    case 'Delivered':
+                        return 'status-delivered';
+                    case 'Cancelled':
+                        return 'status-cancelled';
+                    default:
+                        return '';
+                }
+            }
+
+            function renderTable(items) {
+                tableBody.innerHTML = '';
+                
+                if (items.length === 0) {
+                    const noResultsRow = tableBody.insertRow();
+                    noResultsRow.innerHTML = `<td colspan="6" style="text-align: center; padding: 20px; color: var(--color-secondary-grey);">No orders found matching your criteria.</td>`;
+                    return;
+                }
+
+                items.forEach(item => {
+                    const row = tableBody.insertRow();
+                    const statusClass = getStatusClass(item.status);
+
+                    row.onclick = () => {
+                        console.log(`Clicked on order ${item.id}. You would navigate to a detail page or open a modal here.`);
+                    };
+
+                    row.innerHTML = `
+                        <td>${item.id}</td>
+                        <td>${item.type}</td>
+                        <td>${item.party}</td>
+                        <td><span class="${statusClass}">${item.status}</span></td>
+                        <td>${item.orderDate}</td>
+                        <td>${item.expectedDate}</td>
+                    `;
+                });
+            }
+
+            function filterOrders() {
+                const searchTerm = searchInput.value.toLowerCase().trim();
+                const selectedType = typeFilter.value;
+                const selectedStatus = statusFilter.value;
+
+                const filteredItems = ordersData.filter(item => {
+                    const matchesSearch = item.id.toLowerCase().includes(searchTerm) ||
+                                        item.party.toLowerCase().includes(searchTerm);
+                    const matchesType = selectedType === 'All' || item.type === selectedType;
+                    const matchesStatus = selectedStatus === 'All' || item.status === selectedStatus;
+
+                    return matchesSearch && matchesType && matchesStatus;
+                });
+                
+                renderTable(filteredItems);
+            }
+
+
+            const userDropdown = document.querySelector('.user-dropdown');
+            const dropdownContent = userDropdown.querySelector('.dropdown-content');
+
+            userDropdown.addEventListener('click', function(event) {
+                event.stopPropagation();
+                dropdownContent.classList.toggle('show');
+            });
+
+            window.addEventListener('click', function(event) {
+                if (!userDropdown.contains(event.target)) {
+                    dropdownContent.classList.remove('show');
+                }
+            });
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    formContents.forEach(content => content.classList.add('hidden'));
+                    const formId = this.getAttribute('data-form');
+                    document.getElementById(formId + '-form').classList.remove('hidden');
+                });
+            });
+
+            searchInput.addEventListener('input', filterOrders);
+            typeFilter.addEventListener('change', filterOrders);
+            statusFilter.addEventListener('change', filterOrders);
+
+            document.querySelectorAll('.confirm-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const formType = this.textContent.includes('Supplier') ? 'Supplier' : 'Customer';
+                    alert(`Simulating confirmation for new ${formType} order.`);
+                });
+            });
+
+            filterOrders();
+        });
+    </script>
+    </body>
+</html>
