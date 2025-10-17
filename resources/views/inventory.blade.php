@@ -340,14 +340,14 @@
                 }
             }
             
-                    document.getElementById('add-item-button').addEventListener('click', () => {
-                // ... (rest of the reset logic) ...
-                
-                // FIX: Ensure Name/Unit fields are enabled for *new* creation
-                stockForm.querySelector('[name="item_name"]').readOnly = false;
-                stockForm.querySelector('[name="unit_of_measure"]').readOnly = false;
-                stockDrawer.style.display = 'block'; 
-            });
+            document.getElementById('add-item-button').addEventListener('click', () => {
+        // ... (rest of the reset logic) ...
+        
+        // FIX: Ensure Name/Unit fields are enabled for *new* creation
+        stockForm.querySelector('[name="item_name"]').readOnly = false;
+        stockForm.querySelector('[name="unit_of_measure"]').readOnly = false;
+        stockDrawer.style.display = 'block'; 
+    });
             
             loadInitialData();
         });
