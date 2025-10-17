@@ -9,71 +9,66 @@ use Illuminate\Validation\Rule;
 class SupplierController extends Controller
 {
     /**
-     * Display a listing of the resources (READ operation).
-     * This provides the supplier list for the Manager and the dropdowns.
+     * Display a listing of the resource.
      */
     public function index()
     {
-        // Simply fetch all suppliers from the database
-        $suppliers = Supplier::all();
-
-        // Return the full list as JSON for the frontend to consume
-        return response()->json($suppliers);
+        return response()->json(Supplier::all());
     }
 
     /**
-     * Store a newly created supplier (CREATE operation).
+     * Store a newly created resource in storage.
      */
     public function store(Request $request)
     {
         $request->validate([
-            'supplier_name' => 'required|string|max:100|unique:suppliers,supplier_name',
+            'supplier_name' => 'required|string|max:100|unique:suppliers',
             'contact_person' => 'nullable|string|max:100',
             'phone' => 'nullable|string|max:20',
-            'email' => 'nullable|email|max:100|unique:suppliers,email',
+            'email' => 'nullable|email|max:100|unique:suppliers',
+            'address' => 'nullable|string|max:255',
         ]);
 
         $supplier = Supplier::create($request->all());
-        
-        // TODO: Log the creation activity
 
         return response()->json(['message' => 'Supplier added successfully.', 'supplier' => $supplier], 201);
     }
 
     /**
-     * Update the specified supplier (UPDATE operation).
+     * Update the specified resource in storage.
      */
     public function update(Request $request, Supplier $supplier)
     {
-        // Validation: Ignore the current supplier's name/email when checking for uniqueness
         $request->validate([
-            'supplier_name' => ['required', 'string', 'max:100', Rule::unique('suppliers')->ignore($supplier->id)],
+            // --- THIS IS THE FIX ---
+            // The supplier name is made optional, as it's not edited in the modal.
+            // We still validate it if it IS sent, ensuring it remains unique.
+            'supplier_name' => ['sometimes', 'string', 'max:100', Rule::unique('suppliers')->ignore($supplier->id)],
+            
             'contact_person' => 'nullable|string|max:100',
             'phone' => 'nullable|string|max:20',
             'email' => ['nullable', 'email', 'max:100', Rule::unique('suppliers')->ignore($supplier->id)],
+            'address' => 'nullable|string|max:255',
+            'is_active' => 'required|boolean',
         ]);
 
         $supplier->update($request->all());
 
-        // TODO: Log the update activity
-
-        return response()->json(['message' => 'Supplier updated successfully.', 'supplier' => $supplier], 200);
+        return response()->json(['message' => 'Supplier updated successfully.']);
     }
 
     /**
-     * Remove the specified supplier (DELETE operation).
+     * Remove the specified resource from storage.
      */
     public function destroy(Supplier $supplier)
     {
-        // Safety Check: Prevent deletion if any inventory item still links to this supplier
+        // Prevent deletion if the supplier is linked to any inventory items.
         if ($supplier->inventoryItems()->exists()) {
-            return response()->json(['error' => 'Cannot delete supplier. Active inventory items are still linked.'], 409);
+            return response()->json(['error' => 'Cannot delete supplier. It is currently linked to one or more inventory items.'], 409);
         }
-        
-        $supplier->delete();
-        
-        // TODO: Log the deletion activity
 
-        return response()->json(['message' => 'Supplier deleted successfully.'], 200);
+        $supplier->delete();
+
+        return response()->json(['message' => 'Supplier deleted successfully.']);
     }
 }
