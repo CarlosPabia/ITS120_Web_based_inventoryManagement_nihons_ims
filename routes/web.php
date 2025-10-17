@@ -48,20 +48,19 @@ Route::middleware(['auth'])->group(function () {
     // Order API
     Route::get('orders-data', [OrderController::class, 'index'])->name('api.orders.read');
     Route::post('orders-data', [OrderController::class, 'store'])->name('api.orders.store');
-    Route::get('orders-data/{order}', [OrderController::class, 'show'])->name('api.orders.show');
-    Route::delete('orders-data/{order}', [OrderController::class, 'destroy'])->name('api.orders.destroy')->middleware('role:Manager');
-    Route::patch('orders-data/{order}', [OrderController::class, 'update'])->name('api.orders.update')->middleware('role:Manager'); 
+    Route::patch('orders-data/{order}', [OrderController::class, 'update'])->name('api.orders.update')->middleware('role:Manager');
+    Route::get('orders-data/{order}', [OrderController::class, 'show'])->name('api.orders.show'); // <-- THIS IS THE NEW ROUTE
     
-    // --- SUPPLIER MANAGEMENT API (RBAC Manager-Only) ---
+   // --- SUPPLIER MANAGEMENT API (RBAC Manager-Only) ---
     Route::get('suppliers-data', [SupplierController::class, 'index'])->name('api.suppliers.read'); 
     Route::post('suppliers-data', [SupplierController::class, 'store'])->name('api.suppliers.store')->middleware('role:Manager');
-    // --- THIS IS THE MISSING LINE THAT FIXES THE UPDATE FUNCTIONALITY ---
+    // --- ADD THIS LINE TO FIX THE UPDATE FUNCTIONALITY ---
     Route::patch('suppliers-data/{supplier}', [SupplierController::class, 'update'])->name('api.suppliers.update')->middleware('role:Manager');
     Route::delete('suppliers-data/{supplier}', [SupplierController::class, 'destroy'])->name('api.suppliers.delete')->middleware('role:Manager'); 
 
+
     // --- 5. Reports UI Links (RBAC enforced) ---
-    // Note: The UI route for suppliers should point to the view, not the controller's index which returns JSON
-    Route::get('/suppliers', function () { return view('suppliers'); })->name('suppliers.index')->middleware('role:Manager');
+    Route::get('/suppliers', function () { return view('suppliers'); })->name('suppliers.index')->middleware('role:Manager'); 
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index')->middleware('role:Manager');
 });
 
@@ -74,4 +73,3 @@ Route::middleware(['auth'])->group(function () {
 
 // Set the root URL (/) to automatically redirect to the login page.
 Route::get('/', function () { return redirect()->route('login'); });
-
