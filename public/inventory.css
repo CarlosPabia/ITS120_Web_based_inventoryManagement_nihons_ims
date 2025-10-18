@@ -1,175 +1,52 @@
-/* --- inventory.css --- */
+/* Inventory page styles */
+.inventory-controls { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; gap:12px; }
+.search-bar { width:300px; display:flex; align-items:center; gap:10px; padding:10px 15px; border:1px solid #e2e2e2; border-radius:8px; background:#fff; }
+.search-bar input { border:none; outline:none; background:transparent; font-size:14px; flex:1; }
 
-/* ======================================================= */
-/* 1. INVENTORY CONTROL BAR */
-/* ======================================================= */
+.inventory-table-container { padding:0; overflow:auto; }
+.inventory-table { width:100%; border-collapse:collapse; font-size:14px; text-align:left; }
+.inventory-table th, .inventory-table td { padding:12px 15px; border-bottom:1px solid #eee; }
+.inventory-table thead th { font-weight:600; color:#a03c3c; background:#F9F7F5; position:sticky; top:0; }
+.inventory-table tbody tr:hover { background:#f5f0ec; }
 
-.inventory-controls {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
+.status-critical { color:#c0392b; font-weight:600; }
+.status-low { color:#e6b300; font-weight:600; }
+.status-active { color:#2e7d32; font-weight:600; }
+
+.action-btn { padding:8px 12px; border-radius:6px; border:1px solid rgba(0,0,0,0.1); background:#fff; cursor:pointer; font-weight:600; }
+.danger-btn { background:#f15b5b; color:#fff; border:none; }
+
+/* Action dropdown styles (match static demo) */
+.action-dropdown { position: relative; display: inline-block; }
+.action-dropdown-btn { background:#118a9f; color:#fff; border:none; padding:8px 12px; border-radius:8px; font-weight:600; cursor:pointer; font-size:13px; display:flex; align-items:center; gap:6px; }
+.dropdown-icon-small { font-size:10px; }
+.action-dropdown-content { position:absolute; top:100%; right:0; background:#fff; min-width:160px; box-shadow:0 4px 10px rgba(0,0,0,0.15); z-index:50; border-radius:8px; overflow:hidden; margin-top:5px; border:1px solid #e2e2e2; }
+.action-dropdown-content.hidden { display:none; }
+.dropdown-action-item { color:#a03c3c; padding:10px 15px; text-decoration:none; display:flex; align-items:center; gap:10px; font-size:14px; transition: background-color 0.2s; width:100%; box-sizing:border-box; }
+.dropdown-action-item:hover { background:#F9F7F5; }
+.dropdown-action-item.delete { color:#c0392b; }
+.dropdown-action-item.delete.is-disabled { opacity:0.45; pointer-events:none; }
+
+/* Minimal modal styles for Inventory edit */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 60px 20px;
+  z-index: 1000;
 }
-
-.search-bar {
-    display: flex;
-    align-items: center;
-    background-color: var(--color-beige-card); /* Using your card color */
-    padding: 10px 15px;
-    border-radius: 10px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    width: 350px;
-    border: 1px solid var(--color-light-grey-border);
+.modal-content {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  width: min(480px, 100%);
+  box-shadow: 0 18px 40px rgba(0,0,0,0.2);
 }
+.hidden { display: none !important; }
 
-.search-bar i {
-    color: var(--color-secondary-grey);
-    margin-right: 10px;
-}
-
-.search-bar input {
-    border: none;
-    outline: none;
-    flex-grow: 1;
-    font-size: 15px;
-    background-color: transparent;
-    /* Using your main color for input text */
-    color: var(--color-primary-dark); 
-}
-
-/* Reusing your .security-btn (now back-to-home-btn) style but overriding the hover to match the main.css styles */
-.security-btn { 
-    /* The style from main.css is used, ensuring consistency */
-}
-
-/* Removed separate .back-to-home-btn style as it uses .security-btn */
-
-/* ======================================================= */
-/* 2. INVENTORY TABLE */
-/* ======================================================= */
-
-.inventory-table-container {
-    padding: 0; 
-    overflow-x: auto;
-    flex-grow: 1;
-    overflow-y: auto;
-}
-
-.inventory-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 14px;
-    text-align: left;
-}
-
-.inventory-table th, .inventory-table td {
-    padding: 12px 15px;
-    border-bottom: 1px solid var(--color-light-grey-border);
-}
-
-.inventory-table thead th {
-    font-weight: 600;
-    color: var(--color-primary);
-    background-color: var(--color-background); /* Using background color for contrast/sticky header */
-    position: sticky;
-    top: 0;
-}
-
-.inventory-table tbody tr:hover {
-    background-color: #edeae7; /* Slightly darker than card background */
-}
-
-.status-critical {
-    color: var(--color-status-inactive); /* Red */
-    font-weight: 600;
-}
-
-.status-low {
-    color: #e6b300; /* Amber for low stock */
-    font-weight: 600;
-}
-
-.status-active {
-    color: var(--color-status-active); /* Green for in stock */
-    font-weight: 600;
-}
-
-
-/* ======================================================= */
-/* 3. ACTION DROPDOWN STYLES */
-/* ======================================================= */
-
-.action-dropdown {
-    position: relative;
-    display: inline-block;
-}
-
-.action-dropdown-btn {
-    background-color: var(--color-status-edit);
-    color: var(--color-white);
-    border: none;
-    padding: 8px 12px;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    font-size: 13px;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    transition: background-color 0.2s;
-}
-
-.action-dropdown-btn.edit-button {
-    background-color: var(--color-status-edit);
-}
-
-.action-dropdown-btn:hover {
-    background-color: #128292; /* Slightly darker than status-edit */
-}
-
-.dropdown-icon-small {
-    font-size: 10px;
-}
-
-.action-dropdown-content {
-    position: absolute;
-    top: 100%;
-    right: 0;
-    background-color: var(--color-white);
-    min-width: 140px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-    z-index: 50;
-    border-radius: 8px;
-    overflow: hidden;
-    margin-top: 5px;
-    border: 1px solid var(--color-light-grey-border);
-}
-
-.action-dropdown-content.hidden {
-    display: none;
-}
-
-.dropdown-action-item {
-    color: var(--color-primary);
-    padding: 10px 15px;
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 14px;
-    transition: background-color 0.2s;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-.dropdown-action-item:hover {
-    background-color: var(--color-background);
-}
-
-.dropdown-action-item.delete {
-    color: var(--color-status-inactive);
-}
-
-.dropdown-action-item.delete:hover {
-    background-color: #fce4e4;
-}
+.primary-btn { background:#a03c3c; color:#fff; border:none; padding:10px 14px; border-radius:8px; font-weight:600; }
+.secondary-btn { background:rgba(0,0,0,0.05); color:#a03c3c; border:none; padding:10px 14px; border-radius:8px; font-weight:600; }
+.outline-btn { border:1px solid rgba(160,60,60,0.35); background:transparent; }

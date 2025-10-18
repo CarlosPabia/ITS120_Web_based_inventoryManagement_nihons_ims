@@ -112,4 +112,65 @@ class InventoryController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Update the earliest stock batch expiry for an inventory item.
+     * Creates a zero-quantity batch if none exist.
+     */
+    public function updateExpiry(Request $request, InventoryItem $inventoryItem)
+    {
+        $validated = $request->validate([
+            'expiry_date' => 'required|date',
+        ]);
+
+        $batch = $inventoryItem->stockLevels()
+            ->orderBy('expiry_date', 'asc')
+            ->first();
+
+        if (!$batch) {
+            $batch = new StockLevel([
+                'item_id' => $inventoryItem->id,
+                'quantity' => 0,
+                'minimum_stock_threshold' => 10,
+            ]);
+        }
+
+        $batch->expiry_date = $validated['expiry_date'];
+        $batch->save();
+
+        return response()->json([
+            'message' => 'Expiry date updated successfully.',
+            'item_id' => $inventoryItem->id,
+            'expiry_date' => $batch->expiry_date,
+        ]);
+    }
+
+    /**
+     * Update item details (unit_of_measure) and batch thresholds.
+     */
+    public function updateDetails(Request $request, InventoryItem $inventoryItem)
+    {
+        $validated = $request->validate([
+            'unit_of_measure' => 'nullable|string|max:50',
+            'minimum_stock_threshold' => 'nullable|numeric|min:0',
+        ]);
+
+        if (array_key_exists('unit_of_measure', $validated)) {
+            $inventoryItem->unit_of_measure = $validated['unit_of_measure'];
+            $inventoryItem->save();
+        }
+
+        if (array_key_exists('minimum_stock_threshold', $validated)) {
+            $threshold = (int) $validated['minimum_stock_threshold'];
+            $inventoryItem->stockLevels()->update(['minimum_stock_threshold' => $threshold]);
+        }
+
+        return response()->json([
+            'message' => 'Item details updated successfully.',
+            'item' => [
+                'id' => $inventoryItem->id,
+                'unit' => $inventoryItem->unit_of_measure,
+            ],
+        ]);
+    }
 }

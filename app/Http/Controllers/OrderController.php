@@ -72,10 +72,14 @@ class OrderController extends Controller
                     'error' => 'Cannot create an order for an inactive supplier.'
                 ], 422);
             }
+            // For Adding internal orders, dates may be forced to today on backend; still require fields for non-internal
             if (empty($validated['order_date']) || empty($validated['expected_date'])) {
-                return response()->json([
-                    'error' => 'Order date and expected date are required for supplier orders.'
-                ], 422);
+                // Allow empty in internal (we will set to today below)
+                if (!$supplier->is_system) {
+                    return response()->json([
+                        'error' => 'Order date and expected date are required for supplier orders.'
+                    ], 422);
+                }
             }
         }
 
@@ -98,13 +102,10 @@ class OrderController extends Controller
             }
         }
 
-        $orderDate = $validated['order_date']
-            ? Carbon::parse($validated['order_date'])
-            : Carbon::now();
-
-        $expectedDate = $validated['expected_date']
-            ? Carbon::parse($validated['expected_date'])
-            : ($orderType === 'Supplier' ? null : $orderDate->copy());
+        $isInternal = (bool)($supplier->is_system ?? false);
+        $now = Carbon::now();
+        $orderDate = $validated['order_date'] ? Carbon::parse($validated['order_date']) : $now;
+        $expectedDate = $validated['expected_date'] ? Carbon::parse($validated['expected_date']) : ($orderType === 'Supplier' ? null : $orderDate->copy());
         
         DB::beginTransaction();
         try {
@@ -112,9 +113,9 @@ class OrderController extends Controller
                 'order_type' => $orderType,
                 'action_type' => $orderType === 'Supplier' ? 'Add' : 'Deduct',
                 'supplier_id' => $validated['supplier_id'],
-                'order_status' => 'Pending',
-                'order_date' => $orderType === 'Supplier' ? $orderDate : Carbon::now(),
-                'expected_date' => $orderType === 'Supplier' ? $expectedDate : ($expectedDate ?? Carbon::now()),
+                'order_status' => $isInternal ? 'Confirmed' : 'Pending',
+                'order_date' => $isInternal ? $now : ($orderType === 'Supplier' ? $orderDate : $now),
+                'expected_date' => $isInternal ? $now : ($orderType === 'Supplier' ? $expectedDate : ($expectedDate ?? $now)),
                 'created_by_user_id' => Auth::id(),
             ]);
 
@@ -128,6 +129,13 @@ class OrderController extends Controller
                 ]);
             }
 
+            // Auto-process internal orders
+            if ($isInternal && $order->status_processed_at === null) {
+                $this->processConfirmedOrder($order);
+                $order->status_processed_at = Carbon::now();
+                $order->save();
+            }
+
             DB::commit();
             ActivityLog::create([
                 'user_id' => Auth::id(),
@@ -135,7 +143,8 @@ class OrderController extends Controller
                 'details' => sprintf('Order #%d (%s) recorded with status %s.', $order->id, $order->order_type, $order->order_status),
             ]);
 
-            return response()->json(['message' => 'Order created successfully and is now pending confirmation.', 'order' => $order], 201);
+            $msg = $isInternal ? 'Internal order created and auto-confirmed.' : 'Order created successfully and is now pending confirmation.';
+            return response()->json(['message' => $msg, 'order' => $order], 201);
         } catch (\Throwable $e) {
             DB::rollBack();
             Log::error('Order creation failed', [
@@ -152,6 +161,14 @@ class OrderController extends Controller
      */
     public function update(Request $request, Order $order)
     {
+        // Disallow edits for internal (Nihon Cafe) orders; only deletion is permitted.
+        $order->loadMissing('supplier');
+        if ($order->supplier && ($order->supplier->is_system ?? false)) {
+            return response()->json([
+                'error' => 'Internal orders are read-only and cannot be edited.'
+            ], 422);
+        }
+
         $validated = $request->validate([
             'order_status' => 'required|in:Pending,Confirmed,Cancelled',
             'order_date' => 'nullable|date',

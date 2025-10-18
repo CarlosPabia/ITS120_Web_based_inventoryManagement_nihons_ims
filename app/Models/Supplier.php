@@ -31,6 +31,17 @@ class Supplier extends Model
         'is_system' => 'boolean',
     ];
 
+    // Scopes for differentiating internal vs regular suppliers
+    public function scopeRegular($query)
+    {
+        return $query->where('is_system', false);
+    }
+
+    public function scopeInternal($query)
+    {
+        return $query->where('is_system', true);
+    }
+
     /**
      * Get the inventory items for the supplier.
      */

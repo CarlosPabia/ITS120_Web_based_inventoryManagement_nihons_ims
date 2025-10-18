@@ -43,6 +43,8 @@ Route::middleware(['auth'])->group(function () {
     // Inventory API
     Route::get('inventory-data', [InventoryController::class, 'index'])->name('api.inventory.read');
     Route::post('inventory-data', [InventoryController::class, 'store'])->name('api.inventory.store');
+    Route::patch('inventory-data/{inventoryItem}', [InventoryController::class, 'updateDetails'])->name('api.inventory.update')->middleware('role:Manager');
+    Route::patch('inventory-data/{inventoryItem}/expiry', [InventoryController::class, 'updateExpiry'])->name('api.inventory.expiry')->middleware('role:Manager');
     Route::delete('inventory-data/{inventoryItem}', [InventoryController::class, 'destroy'])->name('api.inventory.delete')->middleware('role:Manager');
     
     // Order API

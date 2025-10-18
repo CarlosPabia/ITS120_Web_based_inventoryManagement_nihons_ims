@@ -10,7 +10,22 @@ use Carbon\Carbon;
 
 class ReportController extends Controller
 {
-    // ... (index method remains the same) ...
+    /**
+     * Show the Reports page with aggregated metrics.
+     */
+    public function index()
+    {
+        $metrics = $this->getDashboardMetrics();
+
+        // Count stock batches expiring within 30 days (with remaining quantity)
+        $expiryCount = StockLevel::where('quantity', '>', 0)
+            ->whereDate('expiry_date', '<=', Carbon::now()->copy()->addDays(30))
+            ->count();
+
+        return view('reports', array_merge($metrics, [
+            'expiryCount' => $expiryCount,
+        ]));
+    }
 
     /**
      * Public method to aggregate and return the metrics required by the Dashboard.
@@ -38,10 +53,10 @@ class ReportController extends Controller
     {
         // Fetch completed customer orders and their items within the date range
         $orders = Order::with('orderItems')
-                        ->where('order_type', 'Customer')
-                        ->whereBetween('order_date', [$startDate, $endDate])
-                        ->where('order_status', 'Completed')
-                        ->get();
+            ->where('order_type', 'Customer')
+            ->whereBetween('order_date', [$startDate, $endDate])
+            ->whereIn('order_status', ['Confirmed', 'Completed']) // support new + legacy
+            ->get();
         
         $totalOrders = $orders->count();
         $totalRevenue = 0;

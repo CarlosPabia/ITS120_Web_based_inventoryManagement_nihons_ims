@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -92,8 +92,8 @@
                         <div class="filter-group">
                             <select id="orders-type-filter" class="form-select">
                                 <option value="All">All Actions</option>
-                                <option value="Supplier">Adding</option>
-                                <option value="Customer">Deducting</option>
+                                <option value="Add">Adding</option>
+                                <option value="Deduct">Deducting</option>
                             </select>
                             <select id="orders-status-filter" class="form-select">
                                 <option value="All">All Statuses</option>
@@ -132,6 +132,7 @@
                         <div class="order-tab-group">
                             <button type="button" class="order-tab active" data-order-mode="Supplier">Adding</button>
                             <button type="button" class="order-tab" data-order-mode="Customer">Deducting</button>
+                            <button type="button" class="order-tab" data-order-mode="Internal">Creating Order (Nihon Cafe)</button>
                         </div>
                     </div>
                     <div class="order-form-content">
@@ -139,46 +140,17 @@
                             Add new stock from an approved supplier catalog.
                         </p>
                         <ul class="order-form-hints">
-                            <li>Choose an approved supplier to unlock catalog items.</li>
-                            <li>Use the toggle above to switch between adding and deducting.</li>
-                            <li>Orders remain pending until you confirm them in the history.</li>
+                            <li>The builder will collect supplier, dates, and items.</li>
+                            <li>Switch the tabs above to create Adding, Deducting, or Internal orders.</li>
+                            <li>Internal orders auto‑confirm; others remain pending until confirmation.</li>
                         </ul>
 
-                        <form id="inline-order-form" class="inline-order-form">
-                            <div class="form-section">
-                                <label class="floating-label">
-                                    <span class="label-text">Supplier</span>
-                                    <select id="inline-supplier-dropdown" class="form-control select-control" disabled required>
-                                        <option value="">Select Supplier</option>
-                                    </select>
-                                </label>
-                            </div>
-
-                            <div id="inline-scheduling" class="form-section dual-grid hidden">
-                                <label class="floating-label">
-                                    <span class="label-text">Order Date</span>
-                                    <input type="date" id="inline-order-date" class="form-control" />
-                                </label>
-                                <label class="floating-label">
-                                    <span class="label-text">Expected Date</span>
-                                    <input type="date" id="inline-expected-date" class="form-control" />
-                                </label>
-                            </div>
-
-                            <div class="form-section">
-                                <p class="mini-heading">Line Items</p>
-                                <div class="inline-items-placeholder" id="inline-items-placeholder">
-                                    No items yet. Launch the builder to add catalog products.
-                                </div>
-                            </div>
-
-                            <div class="form-actions">
-                                <button type="button" class="secondary-btn outline-btn" id="inline-reset-btn">Reset</button>
-                                <button type="button" class="primary-btn is-disabled" id="launch-order-modal" disabled>
-                                    Open Adding Builder
-                                </button>
-                            </div>
-                        </form>
+                        <div class="form-actions">
+                            <button type="button" class="secondary-btn outline-btn" id="inline-reset-btn">Reset</button>
+                            <button type="button" class="primary-btn is-disabled" id="launch-order-modal" disabled>
+                                Open Builder
+                            </button>
+                        </div>
                     </div>
                 </aside>
 
@@ -308,4 +280,6 @@
     <script src="{{ asset('js/orders.js') }}?v=5" defer></script>
 </body>
 </html>
+
+
 

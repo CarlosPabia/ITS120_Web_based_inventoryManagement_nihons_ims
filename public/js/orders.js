@@ -145,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return value;
         }
         return date.toISOString().slice(0, 10);
-    }
+    },
 
     function formatDateForInput(value) {
         if (!value) {
@@ -156,7 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return '';
         }
         return date.toISOString().slice(0, 10);
-    }
+    },
 
     function normalizeStatus(status) {
         if (!status) {
@@ -169,21 +169,21 @@ document.addEventListener('DOMContentLoaded', () => {
             return 'Pending';
         }
         return status;
-    }
+    },
 
     function renderStatusBadge(status) {
         const normalized = normalizeStatus(status);
         const cssClass = STATUS_COLORS[normalized] || '';
         return `<span class="${cssClass}">${normalized}</span>`;
-    }
+    },
 
     function getSupplierById(id) {
         return state.suppliers.find(supplier => Number(supplier.id) === Number(id));
-    }
+    },
 
     function getInventoryMetaById(id) {
         return state.inventory.find(item => Number(item.id) === Number(id));
-    }
+    },
 
     function getAvailableItemsForCurrentSelection() {
         const supplierId = supplierDropdown.value;
@@ -220,7 +220,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 unit: formatUnit(item.unit),
                 quantity: item.quantity,
             }));
-    }
+    },
 
     function buildItemOptionsHtml(items) {
         if (!items.length) {
@@ -235,7 +235,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }).join('');
 
         return `<option value="">Select Item</option>${optionList}`;
-    }
+    },
 
     function refreshAllItemSelects() {
         const availableItems = getAvailableItemsForCurrentSelection();
@@ -261,7 +261,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         addItemRowBtn.disabled = availableItems.length === 0;
-    }
+    },
 
     async function loadInitialData() {
         try {
@@ -289,7 +289,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Initial data load error:', error);
             ordersTableBody.innerHTML = '<tr><td colspan="7" style="padding: 20px; text-align: center; color: #c0392b;">Unable to load orders. Please refresh the page.</td></tr>';
         }
-    }
+    },
 
     function renderSupplierDropdowns() {
         const activeSuppliers = state.suppliers.filter(supplier => supplier.is_active);
@@ -339,7 +339,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         updateInlinePlaceholder();
-    }
+    },
 
     function renderOrdersTable(orders) {
         if (!Array.isArray(orders) || orders.length === 0) {
@@ -399,7 +399,7 @@ document.addEventListener('DOMContentLoaded', () => {
             row.addEventListener('click', () => fetchAndShowOrderDetails(order.id));
             ordersTableBody.appendChild(row);
         });
-    }
+    },
 
     function applyFiltersAndRender() {
         const term = (searchInput.value || '').toLowerCase().trim();
@@ -417,7 +417,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         renderOrdersTable(filtered);
-    }
+    },
 
     function addItemRow() {
         const row = document.createElement('tr');
@@ -442,7 +442,7 @@ document.addEventListener('DOMContentLoaded', () => {
         itemRowsBody.appendChild(row);
         updateFormVisibility();
         refreshAllItemSelects();
-    }
+    },
 
     function updateFormVisibility() {
         const isSupplierOrder = orderTypeSelect.value === 'Supplier';
@@ -490,14 +490,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         refreshAllItemSelects();
-    }
+    },
 
     function removeItemRow(event) {
         if (event.target.classList.contains('remove-row-btn')) {
             event.preventDefault();
             event.target.closest('tr').remove();
         }
-    }
+    },
 
     async function submitOrderForm(event) {
         event.preventDefault();
@@ -583,7 +583,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Order submission error:', error);
             setOrderFormFeedback(error.message || 'Failed to process order.', 'error');
         }
-    }
+    },
 
     async function fetchAndShowOrderDetails(orderId) {
         try {
@@ -659,7 +659,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Details fetch error:', error);
             alert(error.message);
         }
-    }
+    },
 
     function configureDetailsStatusControls(currentStatus) {
         const options = Array.from(detailsStatusSelect.options);
@@ -673,7 +673,7 @@ document.addEventListener('DOMContentLoaded', () => {
             detailsStatusSelect.disabled = false;
         }
     }
-
+,
     async function submitOrderUpdate() {
         if (!canManage || activeDetailsOrderId === null) {
             return;
@@ -722,7 +722,7 @@ document.addEventListener('DOMContentLoaded', () => {
             detailsFeedback.textContent = error.message;
             console.error('Order update error:', error);
         }
-    }
+    },
 
     async function deleteOrder(orderId) {
         try {
@@ -746,7 +746,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Delete order error:', error);
             alert(`Error: ${error.message}`);
         }
-    }
+    },
 
     function setCreateMode(mode) {
         createMode = mode;
@@ -784,7 +784,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         updateInlinePlaceholder();
-    }
+    },
 
     function openOrderModalWithMode(mode) {
         setCreateMode(mode);
@@ -811,7 +811,7 @@ document.addEventListener('DOMContentLoaded', () => {
         itemRowsBody.innerHTML = '';
         addItemRow();
         orderModal.classList.remove('hidden');
-    }
+    
 
     if (inlineSupplierDropdown) {
         inlineSupplierDropdown.addEventListener('change', () => {

@@ -6,87 +6,118 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Inventory - Nihon Cafe</title>
 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('main.css') }}">
     <link rel="stylesheet" href="{{ asset('inventory.css') }}">
-    <style>
-        body { font-family: sans-serif; margin: 0; background-color: #f4f4f4; }
-        .dashboard-layout { display: grid; grid-template-columns: 200px 1fr; min-height: 100vh; }
-        .sidebar { background-color: #333; color: white; padding: 20px 0; position: fixed; height: 100%; width: 200px; }
-        .sidebar-nav-link { display: block; padding: 10px 20px; text-decoration: none; color: white; }
-        .sidebar-nav-link:hover, .sidebar-nav-link.active { background-color: #a03c3c; }
-        .top-navbar { grid-column: 2 / 3; background: white; padding: 10px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; justify-content: flex-end; align-items: center; height: 40px; position: fixed; top: 0; left: 200px; right: 0; z-index: 99; }
-        .main-content { grid-column: 2 / 3; padding: 20px; margin-top: 60px; }
-        .panel { background: white; padding: 20px; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .panel-title { color: #a03c3c; margin-top: 0; }
-        .status-tag { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; }
-        .status-Normal { background-color: #d4edda; color: #155724; }
-        .status-Low { background-color: #fff3cd; color: #856404; }
-        .status-Critical { background-color: #f8d7da; color: #721c24; }
-        .hint-box { background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 10px 15px; border-radius: 4px; margin-bottom: 20px; }
-        .action-btn { padding: 6px 12px; border-radius: 4px; border: none; cursor: pointer; }
-        .action-btn[disabled] { cursor: not-allowed; opacity: 0.5; }
-        .danger-btn { background-color: #c0392b; color: #fff; }
-    </style>
 </head>
 <body>
-    <div class="dashboard-layout">
-        <aside class="sidebar">
-            <div class="sidebar-logo">
-                <h2 style="margin: 0; text-align: center;">NIHON CAFE</h2>
+
+    <nav class="navbar">
+        <div class="navbar-left">
+            <img src="{{ asset('logo.png') }}" alt="Nihon Cafe Logo" class="logo">
+            <span class="logo-text">NIHON CAFE</span>
+        </div>
+        <div class="navbar-right">
+            <div class="user-dropdown">
+                <div class="user-profile-trigger">
+                    <img src="{{ asset('user.png') }}" alt="User Avatar" class="profile-avatar">
+                    <span class="profile-name">@auth {{ Auth::user()->first_name }} {{ Auth::user()->last_name }} @endauth</span>
+                    <i class="fas fa-chevron-down dropdown-icon"></i>
+                </div>
+                <div class="dropdown-content">
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="dropdown-item logout-btn-dropdown">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </button>
+                    </form>
+                </div>
             </div>
-            <ul style="list-style: none; padding: 0;">
-                <li><a href="{{ route('dashboard') }}" class="sidebar-nav-link">Dashboard</a></li>
-                <li><a href="{{ route('orders.index') }}" class="sidebar-nav-link">Orders</a></li>
-                <li><a href="{{ route('inventory.index') }}" class="sidebar-nav-link active">Inventory</a></li>
-                <li><a href="{{ route('suppliers.index') }}" class="sidebar-nav-link">Suppliers</a></li>
-                <li><a href="{{ route('reports.index') }}" class="sidebar-nav-link">Reports</a></li>
-                <li><a href="{{ route('settings.index') }}" class="sidebar-nav-link">Settings</a></li>
+        </div>
+    </nav>
+
+    <div class="app-container">
+        <nav id="sidebar" class="sidebar">
+            <div class="sidebar-header-placeholder"></div>
+            <ul class="nav-links">
+                <li class="nav-item"><a href="{{ route('dashboard') }}" class="nav-link"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+                <li class="nav-item"><a href="{{ route('orders.index') }}" class="nav-link"><i class="fas fa-shopping-cart"></i> Orders</a></li>
+                <li class="nav-item sidebar-title-item"><a href="{{ route('inventory.index') }}" class="nav-link active"><i class="fas fa-boxes"></i> Inventory</a></li>
+                <li class="nav-item"><a href="{{ route('suppliers.index') }}" class="nav-link"><i class="fas fa-truck"></i> Suppliers</a></li>
+                <li class="nav-item"><a href="{{ route('reports.index') }}" class="nav-link"><i class="fas fa-file-alt"></i> Reports</a></li>
+                <li class="nav-item settings-separator"><a href="{{ route('settings.index') }}" class="nav-link"><i class="fas fa-cog"></i> Settings</a></li>
             </ul>
-        </aside>
+        </nav>
 
-        <header class="top-navbar">
-            <div class="user-info">
-                @auth
-                    {{ Auth::user()->first_name }} {{ Auth::user()->last_name }} ({{ Auth::user()->role->role_name ?? 'N/A' }})
-                @endauth
-            </div>
-            <form method="POST" action="{{ route('logout') }}" style="display:inline; margin-left: 15px;">
-                @csrf
-                <button type="submit" class="logout-btn">Logout</button>
-            </form>
-        </header>
-
-        <main class="main-content" data-role="{{ Auth::user()->role->role_name ?? '' }}">
-            <h1 class="panel-title">Inventory</h1>
-
-            <div class="hint-box">
-                Items are created and replenished through order processing. You may retire an item once all stock is cleared and it is no longer tied to order history.
+        <main class="content-area" data-role="{{ Auth::user()->role->role_name ?? '' }}">
+            <div class="inventory-controls">
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="search-input" placeholder="Search inventory..." />
+                </div>
+                <a href="{{ route('dashboard') }}" class="security-btn">Back to Home</a>
             </div>
 
-            <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; gap: 20px;">
-                <input type="text" id="search-input" placeholder="Search item or supplier" style="padding: 8px; width: 280px; border: 1px solid #ccc; border-radius: 4px;">
-                <span id="inventory-summary" style="color: #555; font-size: 14px;"></span>
-            </div>
-
-            <div class="panel" style="padding: 0; overflow-x: auto;">
-                <table style="width: 100%; border-collapse: collapse;">
+            <div class="inventory-table-container card">
+                <table class="inventory-table">
                     <thead>
-                        <tr style="background-color: #f0f0f0;">
-                            <th style="padding: 10px; text-align: left;">ID</th>
-                            <th style="padding: 10px; text-align: left;">Item Name</th>
-                            <th style="padding: 10px; text-align: left;">Quantity</th>
-                            <th style="padding: 10px; text-align: left;">Unit</th>
-                            <th style="padding: 10px; text-align: left;">Supplier</th>
-                            <th style="padding: 10px; text-align: left;">Status</th>
-                            <th style="padding: 10px; text-align: left;">Actions</th>
+                        <tr>
+                            <th>SKU / ID</th>
+                            <th>Item Name</th>
+                            <th>Quantity in Stock</th>
+                            <th>Unit</th>
+                            <th>Expiry Date</th>
+                            <th>Supplier</th>
+                            <th>Status</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody id="inventory-table-body">
-                        <tr><td colspan="7" style="padding: 20px; text-align: center;">Loading inventory...</td></tr>
+                        <tr><td colspan="8" style="text-align:center; padding: 20px;">Loading inventory...</td></tr>
                     </tbody>
                 </table>
             </div>
         </main>
+    </div>
+
+    <!-- Edit Expiry Modal -->
+    <div id="edit-expiry-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h2 style="margin-top:0;">Edit Expiry Date</h2>
+            <p id="edit-expiry-item-name" style="color:#555; margin-top:0;"></p>
+            <div style="display:grid; grid-template-columns: 1fr; gap:10px;">
+                <label style="display:flex; flex-direction:column; gap:6px;">
+                    <span style="font-size:12px; font-weight:600; color:#666;">Expiry Date</span>
+                    <input type="date" id="edit-expiry-input" class="form-control" />
+                </label>
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:16px;">
+                <button type="button" class="secondary-btn outline-btn" id="edit-expiry-cancel">Cancel</button>
+                <button type="button" class="primary-btn" id="edit-expiry-save">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Details Modal -->
+    <div id="edit-details-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h2 style="margin-top:0;">Edit Item Details</h2>
+            <p id="edit-details-item-name" style="color:#555; margin-top:0;"></p>
+            <div style="display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:10px;">
+                <label style="display:flex; flex-direction:column; gap:6px;">
+                    <span style="font-size:12px; font-weight:600; color:#666;">Unit of Measure</span>
+                    <input type="text" id="edit-unit-input" class="form-control" placeholder="e.g., kg, L, pcs" />
+                </label>
+                <label style="display:flex; flex-direction:column; gap:6px;">
+                    <span style="font-size:12px; font-weight:600; color:#666;">Minimum Stock Threshold</span>
+                    <input type="number" id="edit-threshold-input" class="form-control" min="0" step="1" />
+                </label>
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:16px;">
+                <button type="button" class="secondary-btn outline-btn" id="edit-details-cancel">Cancel</button>
+                <button type="button" class="primary-btn" id="edit-details-save">Save</button>
+            </div>
+        </div>
     </div>
 
     <script src="{{ asset('js/inventory.js') }}" defer></script>

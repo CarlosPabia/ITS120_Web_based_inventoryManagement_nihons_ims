@@ -55,7 +55,7 @@ CREATE TABLE `stock_levels` (
 -- 6. ORDERS Table (Header)
 CREATE TABLE `orders` (
     `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    `order_type` ENUM('Supplier', 'Customer') NOT NULL,
+    `order_type` ENUM('Adding', 'Deducting') NOT NULL,
     `supplier_id` INT UNSIGNED NULL, -- NULL if a customer order/sale
     `order_status` VARCHAR(50) NOT NULL COMMENT 'e.g., Pending, Confirmed, Cancelled',
     `order_date` DATETIME NOT NULL,
