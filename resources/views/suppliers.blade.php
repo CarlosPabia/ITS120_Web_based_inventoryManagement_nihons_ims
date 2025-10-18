@@ -8,7 +8,7 @@
     
     {{-- Use Laravel's asset() helper to generate correct paths to your CSS --}}
     <link rel="stylesheet" href="{{ asset('main.css') }}"> 
-    <link rel="stylesheet" href="{{ asset('suppliers.css') }}">
+    <link rel="stylesheet" href="{{ asset('suppliers.css') }}?v=2">
 </head>
 <body>
     <nav class="navbar">
@@ -117,6 +117,14 @@
                             <input type="email" name="email" placeholder="Email Address" class="form-input-suppliers" />
                             <input type="tel" name="phone" placeholder="Phone Number" class="form-input-suppliers" />
                             <input type="text" name="address" placeholder="Address" class="form-input-suppliers" />
+                            <label class="form-label">Catalog Items</label>
+                            <div class="catalog-input-row">
+                                <input type="text" id="add-catalog-name" placeholder="Item Name" class="form-input-suppliers" />
+                                <input type="text" id="add-catalog-unit" placeholder="Unit (e.g., kg, pcs)" class="form-input-suppliers" />
+                            </div>
+                            <textarea id="add-catalog-description" placeholder="Description (optional)" class="form-input-suppliers"></textarea>
+                            <button type="button" class="catalog-add-btn" id="add-catalog-add-btn">Add Catalog Item</button>
+                            <ul id="add-catalog-list" class="catalog-item-list"></ul>
                             <button type="submit" class="add-supplier-confirm-btn">Add Supplier</button>
                         </form>
                     </div>
@@ -140,6 +148,14 @@
                 <input type="tel" name="phone" class="form-input-suppliers" id="edit-phone"/>
                 <label>Address</label>
                 <input type="text" name="address" class="form-input-suppliers" id="edit-address"/>
+                <label>Catalog Items</label>
+                <div class="catalog-input-row">
+                    <input type="text" id="edit-catalog-name" placeholder="Item Name" class="form-input-suppliers" />
+                    <input type="text" id="edit-catalog-unit" placeholder="Unit (e.g., kg, pcs)" class="form-input-suppliers" />
+                </div>
+                <textarea id="edit-catalog-description" placeholder="Description (optional)" class="form-input-suppliers"></textarea>
+                <button type="button" class="catalog-add-btn" id="edit-catalog-add-btn">Add Catalog Item</button>
+                <ul id="edit-catalog-list" class="catalog-item-list"></ul>
                 <label class="status-label">Status</label>
                 <div class="status-toggle-group" id="modal-status-toggle">
                     <button type="button" class="status-toggle-btn" data-status="1">Active</button> 
@@ -155,7 +171,7 @@
     </div>
 
     {{-- Link to the new, dedicated JavaScript file for this page --}}
-    <script src="{{ asset('js/suppliers.js') }}" defer></script>
+    <script src="{{ asset('js/suppliers.js') }}?v=3" defer></script>
     <script src="{{ asset('.html/script_Front.js') }}" defer></script>
 </body>
 </html>

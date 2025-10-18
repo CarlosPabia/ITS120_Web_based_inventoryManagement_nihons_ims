@@ -9,12 +9,13 @@ class OrderItem extends Model
 {
     public $timestamps = false;
     protected $table = 'order_items';
-   protected $fillable = [
-    'order_id',
-    'item_id',
-    'quantity_ordered',
-    'unit_price',
-];
+    protected $fillable = [
+        'order_id',
+        'item_id',
+        'quantity_ordered',
+        'unit_price',
+        'expected_stock_expiry',
+    ];
 
     public function order(): BelongsTo
     {

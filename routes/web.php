@@ -50,6 +50,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('orders-data', [OrderController::class, 'store'])->name('api.orders.store');
     Route::patch('orders-data/{order}', [OrderController::class, 'update'])->name('api.orders.update')->middleware('role:Manager');
     Route::get('orders-data/{order}', [OrderController::class, 'show'])->name('api.orders.show'); // <-- THIS IS THE NEW ROUTE
+    Route::delete('orders-data/{order}', [OrderController::class, 'destroy'])->name('api.orders.delete')->middleware('role:Manager');
     
    // --- SUPPLIER MANAGEMENT API (RBAC Manager-Only) ---
     Route::get('suppliers-data', [SupplierController::class, 'index'])->name('api.suppliers.read'); 

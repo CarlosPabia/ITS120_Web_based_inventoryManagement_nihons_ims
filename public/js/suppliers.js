@@ -1,54 +1,79 @@
-document.addEventListener('DOMContentLoaded', function() {
-    // --- API Endpoint ---
+document.addEventListener('DOMContentLoaded', () => {
     const API_URL = '/suppliers-data';
 
-    // --- Element References ---
     const grid = document.getElementById('supplier-cards-grid');
     const searchInput = document.getElementById('supplier-search');
-    
-    // Add Form Elements
     const addForm = document.getElementById('add-supplier-form');
     const addSupplierBtn = document.getElementById('add-supplier-btn-header');
+    const csrfToken = addForm.querySelector('input[name="_token"]').value;
 
-    // Edit Modal Elements
+    const addCatalogNameInput = document.getElementById('add-catalog-name');
+    const addCatalogUnitInput = document.getElementById('add-catalog-unit');
+    const addCatalogDescriptionInput = document.getElementById('add-catalog-description');
+    const addCatalogList = document.getElementById('add-catalog-list');
+    const addCatalogAddBtn = document.getElementById('add-catalog-add-btn');
+
     const editModal = document.getElementById('edit-supplier-modal');
     const editForm = document.getElementById('edit-supplier-form-modal');
     const cancelEditBtn = document.getElementById('cancel-edit-btn');
-    const csrfToken = addForm.querySelector('input[name="_token"]').value;
+    const statusToggle = document.getElementById('modal-status-toggle');
+    const inactiveToggleBtn = statusToggle.querySelector('[data-status="0"]');
+    const editCatalogNameInput = document.getElementById('edit-catalog-name');
+    const editCatalogUnitInput = document.getElementById('edit-catalog-unit');
+    const editCatalogDescriptionInput = document.getElementById('edit-catalog-description');
+    const editCatalogAddBtn = document.getElementById('edit-catalog-add-btn');
+    const editCatalogList = document.getElementById('edit-catalog-list');
 
-    let allSuppliers = []; // Cache for the suppliers list
+    let allSuppliers = [];
+    let addCatalogNewItems = [];
+    let editCatalogExistingItems = [];
+    let editCatalogNewItems = [];
 
-    // --- Main Functions ---
-
-    /**
-     * Fetches all suppliers from the backend and renders them.
-     */
-    async function initializeSuppliers() {
+    async function fetchSuppliers() {
         try {
             const response = await fetch(API_URL);
-            if (!response.ok) throw new Error('Failed to fetch suppliers.');
+            if (!response.ok) {
+                throw new Error('Failed to fetch suppliers.');
+            }
+
             allSuppliers = await response.json();
             renderCards(allSuppliers);
         } catch (error) {
-            console.error('Error initializing suppliers:', error);
-            grid.innerHTML = `<p class="error-message">Error loading data.</p>`;
+            console.error('Supplier fetch error:', error);
+            grid.innerHTML = `<p class="error-message">${error.message}</p>`;
         }
     }
 
-    /**
-     * Renders an array of supplier objects as cards in the grid.
-     * @param {Array} suppliers - The array of supplier objects.
-     */
+    function formatUnit(unit) {
+        if (!unit) {
+            return '-';
+        }
+        const trimmed = unit.toString().trim();
+        return trimmed.length ? trimmed : '-';
+    }
+
     function renderCards(suppliers) {
         grid.innerHTML = '';
-        if (suppliers.length === 0) {
-            grid.innerHTML = `<p style="text-align: center; padding: 20px;">No suppliers found.</p>`;
+
+        if (!suppliers.length) {
+            grid.innerHTML = '<p style="text-align: center; padding: 20px;">No suppliers found.</p>';
             return;
         }
 
         suppliers.forEach(supplier => {
             const statusClass = supplier.is_active ? 'status-active-text' : 'status-inactive-text';
             const statusText = supplier.is_active ? 'ACTIVE' : 'INACTIVE';
+            let deleteDisabled = supplier.is_active || supplier.is_system;
+            let deleteTitle = supplier.is_active ? 'Deactivate the supplier before deleting.' : 'Delete supplier';
+            if (supplier.is_system) {
+                deleteDisabled = true;
+                deleteTitle = 'System suppliers cannot be deleted.';
+            }
+
+            const items = Array.isArray(supplier.items) ? supplier.items : [];
+            const catalogHtml = items.length
+                ? `<ul class="supplier-item-list">${items.map(item => `<li>${item.name} (${formatUnit(item.unit)})</li>`).join('')}</ul>`
+                : '<p class="supplier-no-items">No catalog items assigned yet.</p>';
 
             const card = document.createElement('div');
             card.className = 'card supplier-card';
@@ -60,133 +85,307 @@ document.addEventListener('DOMContentLoaded', function() {
                 <p><strong>Phone:</strong> ${supplier.phone || 'N/A'}</p>
                 <p><strong>Address:</strong> ${supplier.address || 'N/A'}</p>
                 <p class="${statusClass}"><strong>Status:</strong> ${statusText}</p>
+                <div class="supplier-items-block">
+                    <strong>Catalog:</strong>
+                    ${catalogHtml}
+                </div>
                 <div class="card-actions">
                     <button class="edit-supplier-btn" data-id="${supplier.id}"><i class="fas fa-edit"></i> Edit</button>
-                    <button class="delete-supplier-btn" data-id="${supplier.id}"><i class="fas fa-trash"></i> Delete</button>
+                    <button class="delete-supplier-btn" data-id="${supplier.id}" ${deleteDisabled ? 'disabled' : ''} title="${deleteTitle}"><i class="fas fa-trash"></i> Delete</button>
                 </div>
             `;
+
             grid.appendChild(card);
         });
     }
-    
-    /**
-     * Handles the submission of the "Add New Supplier" form.
-     */
+
+    function resetAddCatalogState() {
+        addCatalogNewItems = [];
+        addCatalogNameInput.value = '';
+        addCatalogUnitInput.value = '';
+        addCatalogDescriptionInput.value = '';
+        renderAddCatalogList();
+    }
+
+    function renderAddCatalogList() {
+        if (!addCatalogList) {
+            return;
+        }
+
+        if (!addCatalogNewItems.length) {
+            addCatalogList.innerHTML = '<li class="catalog-empty">No catalog items added yet.</li>';
+            return;
+        }
+
+        addCatalogList.innerHTML = addCatalogNewItems
+            .map((item, index) => `
+                <li class="catalog-entry">
+                    <span>${item.name} (${formatUnit(item.unit)})</span>
+                    <button type="button" class="catalog-remove-btn" data-context="add" data-index="${index}">×</button>
+                </li>
+            `)
+            .join('');
+    }
+
+    function renderEditCatalogList() {
+        if (!editCatalogList) {
+            return;
+        }
+
+        if (!editCatalogExistingItems.length && !editCatalogNewItems.length) {
+            editCatalogList.innerHTML = '<li class="catalog-empty">No catalog items assigned.</li>';
+            return;
+        }
+
+        const existingHtml = editCatalogExistingItems
+            .map((item, index) => `
+                <li class="catalog-entry">
+                    <span>${item.name} (${formatUnit(item.unit)})</span>
+                    <button type="button" class="catalog-remove-btn" data-context="existing" data-index="${index}">×</button>
+                </li>
+            `)
+            .join('');
+
+        const newHtml = editCatalogNewItems
+            .map((item, index) => `
+                <li class="catalog-entry is-new">
+                    <span>${item.name} (${formatUnit(item.unit)}) <em>(new)</em></span>
+                    <button type="button" class="catalog-remove-btn" data-context="new" data-index="${index}">×</button>
+                </li>
+            `)
+            .join('');
+
+        editCatalogList.innerHTML = existingHtml + newHtml;
+    }
+
+    function buildNewItemPayload(items) {
+        return items.map(item => ({
+            name: item.name,
+            unit: item.unit,
+            description: item.description || null,
+        }));
+    }
+
+    addCatalogAddBtn.addEventListener('click', () => {
+        const name = addCatalogNameInput.value.trim();
+        const unit = addCatalogUnitInput.value.trim();
+        const description = addCatalogDescriptionInput.value.trim();
+
+        if (!name || !unit) {
+            alert('Provide both name and unit for the catalog item.');
+            return;
+        }
+
+        addCatalogNewItems.push({ name, unit, description });
+        addCatalogNameInput.value = '';
+        addCatalogUnitInput.value = '';
+        addCatalogDescriptionInput.value = '';
+        renderAddCatalogList();
+    });
+
+    addCatalogList.addEventListener('click', event => {
+        const removeBtn = event.target.closest('.catalog-remove-btn');
+        if (!removeBtn) {
+            return;
+        }
+
+        const index = Number(removeBtn.dataset.index);
+        if (!Number.isNaN(index)) {
+            addCatalogNewItems.splice(index, 1);
+            renderAddCatalogList();
+        }
+    });
+
+    editCatalogAddBtn.addEventListener('click', () => {
+        const name = editCatalogNameInput.value.trim();
+        const unit = editCatalogUnitInput.value.trim();
+        const description = editCatalogDescriptionInput.value.trim();
+
+        if (!name || !unit) {
+            alert('Provide both name and unit for the catalog item.');
+            return;
+        }
+
+        editCatalogNewItems.push({ name, unit, description });
+        editCatalogNameInput.value = '';
+        editCatalogUnitInput.value = '';
+        editCatalogDescriptionInput.value = '';
+        renderEditCatalogList();
+    });
+
+    editCatalogList.addEventListener('click', event => {
+        const removeBtn = event.target.closest('.catalog-remove-btn');
+        if (!removeBtn) {
+            return;
+        }
+
+        const context = removeBtn.dataset.context;
+        const index = Number(removeBtn.dataset.index);
+
+        if (context === 'existing' && !Number.isNaN(index)) {
+            editCatalogExistingItems.splice(index, 1);
+        } else if (context === 'new' && !Number.isNaN(index)) {
+            editCatalogNewItems.splice(index, 1);
+        }
+
+        renderEditCatalogList();
+    });
+
     async function handleAddFormSubmit(event) {
         event.preventDefault();
+
         const formData = new FormData(addForm);
-        const data = Object.fromEntries(formData.entries());
+        const payload = Object.fromEntries(formData.entries());
+        payload.items = [];
+        payload.new_items = buildNewItemPayload(addCatalogNewItems);
 
         try {
             const response = await fetch(API_URL, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
-                body: JSON.stringify(data),
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(payload),
             });
+
             const result = await response.json();
-            if (!response.ok) throw new Error(result.error || 'Could not add supplier.');
-            
+            if (!response.ok) {
+                throw new Error(result.error || 'Could not add supplier.');
+            }
+
             alert(result.message);
             addForm.reset();
-            initializeSuppliers(); // Refresh the list
+            resetAddCatalogState();
+            await fetchSuppliers();
         } catch (error) {
             console.error('Add supplier error:', error);
             alert(`Error: ${error.message}`);
         }
     }
 
-    /**
-     * Handles the submission of the "Edit Supplier" modal form.
-     */
     async function handleEditFormSubmit(event) {
         event.preventDefault();
+
         const supplierId = document.getElementById('edit-supplier-id').value;
         const formData = new FormData(editForm);
-        const data = Object.fromEntries(formData.entries());
+        const payload = Object.fromEntries(formData.entries());
+        payload.items = editCatalogExistingItems.map(item => item.id);
+        payload.new_items = buildNewItemPayload(editCatalogNewItems);
 
         try {
             const response = await fetch(`${API_URL}/${supplierId}`, {
                 method: 'PATCH',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
-                body: JSON.stringify(data),
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(payload),
             });
+
             const result = await response.json();
-            if (!response.ok) throw new Error(result.error || 'Could not update supplier.');
+            if (!response.ok) {
+                throw new Error(result.error || 'Could not update supplier.');
+            }
 
             alert(result.message);
             closeEditModal();
-            initializeSuppliers(); // Refresh the list
+            await fetchSuppliers();
         } catch (error) {
             console.error('Update supplier error:', error);
             alert(`Error: ${error.message}`);
         }
     }
-    
-    /**
-     * Deletes a supplier after confirmation.
-     * @param {string} supplierId - The ID of the supplier to delete.
-     */
+
     async function deleteSupplier(supplierId) {
-        if (!confirm('Are you sure you want to delete this supplier? This action cannot be undone.')) return;
+        if (!confirm('Are you sure you want to delete this supplier? This action cannot be undone.')) {
+            return;
+        }
 
         try {
             const response = await fetch(`${API_URL}/${supplierId}`, {
                 method: 'DELETE',
-                headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' }
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                }
             });
+
             const result = await response.json();
-            if (!response.ok) throw new Error(result.error || 'Failed to delete supplier.');
+            if (!response.ok) {
+                throw new Error(result.error || 'Failed to delete supplier.');
+            }
 
             alert(result.message);
-            initializeSuppliers(); // Refresh the list
+            await fetchSuppliers();
         } catch (error) {
-            console.error('Delete error:', error);
+            console.error('Delete supplier error:', error);
             alert(`Error: ${error.message}`);
         }
     }
 
-    // --- Modal & Helper Functions ---
-
     function openEditModal(supplierId) {
-        const supplier = allSuppliers.find(s => s.id == supplierId);
-        if (!supplier) return;
+        const supplier = allSuppliers.find(s => Number(s.id) === Number(supplierId));
+        if (!supplier) {
+            return;
+        }
 
         editForm.reset();
+        editCatalogNewItems = [];
+        editCatalogExistingItems = (supplier.items || []).map(item => ({
+            id: item.id,
+            name: item.name,
+            unit: formatUnit(item.unit),
+        }));
+        renderEditCatalogList();
+
         document.getElementById('edit-supplier-id').value = supplier.id;
         document.getElementById('modal-supplier-name').textContent = supplier.supplier_name;
         document.getElementById('edit-contact-person').value = supplier.contact_person || '';
         document.getElementById('edit-email').value = supplier.email || '';
         document.getElementById('edit-phone').value = supplier.phone || '';
         document.getElementById('edit-address').value = supplier.address || '';
-        
-        const statusToggle = document.getElementById('modal-status-toggle');
+        document.getElementById('edit-is-active').value = supplier.is_active ? 1 : 0;
+
         statusToggle.querySelectorAll('.status-toggle-btn').forEach(btn => btn.classList.remove('active'));
         const activeBtn = statusToggle.querySelector(`[data-status="${supplier.is_active ? 1 : 0}"]`);
-        if (activeBtn) activeBtn.classList.add('active');
-        document.getElementById('edit-is-active').value = supplier.is_active ? 1 : 0;
+        if (activeBtn) {
+            activeBtn.classList.add('active');
+        }
+
+        if (supplier.is_system) {
+            inactiveToggleBtn.setAttribute('disabled', 'disabled');
+            inactiveToggleBtn.title = 'System suppliers cannot be deactivated.';
+        } else {
+            inactiveToggleBtn.removeAttribute('disabled');
+            inactiveToggleBtn.title = '';
+        }
 
         editModal.classList.remove('hidden');
     }
 
     function closeEditModal() {
         editModal.classList.add('hidden');
+        editCatalogExistingItems = [];
+        editCatalogNewItems = [];
+        renderEditCatalogList();
     }
 
     function handleSearch() {
         const query = searchInput.value.toLowerCase();
-        const filtered = allSuppliers.filter(s => 
-            s.supplier_name.toLowerCase().includes(query) ||
-            (s.contact_person && s.contact_person.toLowerCase().includes(query))
+        const filtered = allSuppliers.filter(supplier =>
+            supplier.supplier_name.toLowerCase().includes(query) ||
+            (supplier.contact_person && supplier.contact_person.toLowerCase().includes(query))
         );
         renderCards(filtered);
     }
 
-    // --- Event Listeners ---
-
     addForm.addEventListener('submit', handleAddFormSubmit);
     editForm.addEventListener('submit', handleEditFormSubmit);
     cancelEditBtn.addEventListener('click', closeEditModal);
-    
+
     addSupplierBtn.addEventListener('click', () => {
         document.querySelector('.add-supplier-panel').scrollIntoView({ behavior: 'smooth' });
         document.querySelector('#add-supplier-form input').focus();
@@ -194,29 +393,37 @@ document.addEventListener('DOMContentLoaded', function() {
 
     searchInput.addEventListener('input', handleSearch);
 
-    // Use event delegation for buttons inside the dynamic grid
-    grid.addEventListener('click', function(event) {
+    grid.addEventListener('click', event => {
         const editBtn = event.target.closest('.edit-supplier-btn');
         if (editBtn) {
             openEditModal(editBtn.dataset.id);
+            return;
         }
+
         const deleteBtn = event.target.closest('.delete-supplier-btn');
-        if (deleteBtn) {
+        if (deleteBtn && !deleteBtn.disabled) {
             deleteSupplier(deleteBtn.dataset.id);
         }
     });
-    
-    // Handle status toggle clicks inside the modal
-    document.getElementById('modal-status-toggle').addEventListener('click', function(event) {
+
+    statusToggle.addEventListener('click', event => {
         const statusBtn = event.target.closest('.status-toggle-btn');
-        if (statusBtn) {
-            this.querySelectorAll('.status-toggle-btn').forEach(b => b.classList.remove('active'));
-            statusBtn.classList.add('active');
-            document.getElementById('edit-is-active').value = statusBtn.dataset.status;
+        if (!statusBtn || statusBtn.disabled) {
+            return;
+        }
+
+        statusToggle.querySelectorAll('.status-toggle-btn').forEach(button => button.classList.remove('active'));
+        statusBtn.classList.add('active');
+        document.getElementById('edit-is-active').value = statusBtn.dataset.status;
+    });
+
+    window.addEventListener('click', event => {
+        if (event.target === editModal) {
+            closeEditModal();
         }
     });
 
-    // --- Initial Load ---
-    initializeSuppliers();
+    resetAddCatalogState();
+    renderEditCatalogList();
+    fetchSuppliers();
 });
-

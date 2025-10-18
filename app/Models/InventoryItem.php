@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Models\Supplier;
 use App\Models\StockLevel;
@@ -31,5 +32,11 @@ class InventoryItem extends Model
     public function orderItems(): HasMany
     {
         return $this->hasMany(OrderItem::class, 'item_id', 'id');
+    }
+
+    public function suppliers(): BelongsToMany
+    {
+        return $this->belongsToMany(Supplier::class, 'supplier_catalog', 'inventory_item_id', 'supplier_id')
+            ->withTimestamps();
     }
 }

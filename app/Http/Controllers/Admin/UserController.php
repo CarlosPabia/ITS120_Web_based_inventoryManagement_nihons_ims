@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Role;
+use App\Models\ActivityLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
@@ -18,7 +19,13 @@ class UserController extends Controller
     {
         $users = User::with('role')->get(); 
         $roles = Role::all();
-        return view('settings', compact('users', 'roles'));
+        $auditLogs = ActivityLog::with('user')
+            ->where('activity_type', 'like', 'Order%')
+            ->orderByDesc('timestamp')
+            ->limit(25)
+            ->get();
+
+        return view('settings', compact('users', 'roles', 'auditLogs'));
     }
 
     /**

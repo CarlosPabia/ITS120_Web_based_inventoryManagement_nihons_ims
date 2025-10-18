@@ -3,12 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\InventoryItem;
-use App\Models\StockLevel;
-use App\Models\Supplier;
-use App\Models\OrderItem;
+use App\Models\ActivityLog;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class InventoryController extends Controller
 {
@@ -18,10 +17,12 @@ class InventoryController extends Controller
     public function index()
     {
         $items = InventoryItem::with(['supplier', 'stockLevels'])
+            ->withCount('orderItems')
             ->get()
             ->map(function ($item) {
                 $totalQuantity = $item->stockLevels->sum('quantity');
                 $minStock = $item->stockLevels->max('minimum_stock_threshold');
+                $hasOrderHistory = $item->order_items_count > 0;
                 
                 if ($totalQuantity <= 0) {
                     $status = 'Critical';
@@ -29,6 +30,15 @@ class InventoryController extends Controller
                     $status = 'Low';
                 } else {
                     $status = 'Normal';
+                }
+
+                $canDelete = $totalQuantity <= 0 && !$hasOrderHistory;
+                $deleteReason = null;
+
+                if ($totalQuantity > 0) {
+                    $deleteReason = 'Item still has stock remaining.';
+                } elseif ($hasOrderHistory) {
+                    $deleteReason = 'Item is referenced in existing order history.';
                 }
 
                 return [
@@ -40,6 +50,8 @@ class InventoryController extends Controller
                     'quantity' => $totalQuantity,
                     'status' => $status,
                     'batches' => $item->stockLevels, // Data needed for the Edit form (for expiry dates)
+                    'can_delete' => $canDelete,
+                    'delete_block_reason' => $deleteReason,
                 ];
             });
 
@@ -52,54 +64,9 @@ class InventoryController extends Controller
      */
     public function store(Request $request)
     {
-        // 1. Validation
-        $request->validate([
-            'id' => ['nullable', 'exists:inventory_items,id'],
-            'item_name' => 'required|string|max:255',
-            'unit_of_measure' => 'required|string|max:20',
-            'supplier_id' => 'nullable|exists:suppliers,id',
-            'quantity_adjustment' => 'nullable|numeric|sometimes', 
-            'expiry_date' => 'nullable|date_format:Y-m-d|required_with:quantity_adjustment',
-        ]);
-        
-        DB::beginTransaction();
-
-        try {
-            // 2. Find or Create the Inventory Item (Update Item Details)
-            if ($request->filled('id')) {
-                $item = InventoryItem::findOrFail($request->id);
-                // Note: The form disables item_name and unit_of_measure during edit, 
-                // but we update supplier_id if provided.
-                $item->update($request->only(['item_name', 'unit_of_measure', 'supplier_id']));
-            } else {
-                // Creating a new item
-                $item = InventoryItem::create($request->only(['item_name', 'unit_of_measure', 'supplier_id', 'item_description']));
-            }
-            
-            // 3. Handle Stock Adjustment
-            if ($request->filled('quantity_adjustment') && $request->quantity_adjustment > 0) {
-                
-                $stock = StockLevel::firstOrNew([
-                    'item_id' => $item->id,
-                    'expiry_date' => $request->expiry_date, 
-                ]);
-                
-                $stock->quantity += $request->quantity_adjustment;
-                
-                if (!$stock->exists) {
-                    $stock->minimum_stock_threshold = 10; 
-                }
-                
-                $stock->save();
-            }
-            
-            DB::commit();
-            return response()->json(['message' => 'Inventory processed successfully.', 'item' => $item], 200);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json(['error' => 'Failed to process inventory update.'], 500);
-        }
+        return response()->json([
+            'error' => 'Manual inventory creation or editing is disabled. Use orders to adjust stock levels.'
+        ], 403);
     }
     
     /**
@@ -107,14 +74,42 @@ class InventoryController extends Controller
      */
     public function destroy(InventoryItem $inventoryItem)
     {
-        // Safety Check: Prevent deletion if item has existing stock > 0
-        if ($inventoryItem->stockLevels()->where('quantity', '>', 0)->exists()) {
-            return response()->json(['error' => 'Cannot delete item with remaining stock. Adjust stock to zero first.'], 409);
+        try {
+            $hasStock = $inventoryItem->stockLevels()->where('quantity', '>', 0)->exists();
+
+            if ($hasStock) {
+                return response()->json([
+                    'error' => 'Cannot delete item with remaining stock. Adjust stock to zero first.'
+                ], 409);
+            }
+
+            if ($inventoryItem->orderItems()->exists()) {
+                return response()->json([
+                    'error' => 'Cannot delete item while it still appears in order history.'
+                ], 409);
+            }
+
+            DB::transaction(function () use ($inventoryItem) {
+                $inventoryItem->stockLevels()->delete();
+                $inventoryItem->delete();
+            });
+
+            ActivityLog::create([
+                'user_id' => Auth::id(),
+                'activity_type' => 'Inventory Item Deleted',
+                'details' => 'Inventory item #' . $inventoryItem->id . ' - ' . $inventoryItem->item_name . ' removed from catalogue.',
+            ]);
+
+            return response()->json(['message' => 'Item deleted successfully.'], 200);
+        } catch (\Throwable $exception) {
+            Log::error('Inventory deletion failed', [
+                'item_id' => $inventoryItem->id,
+                'exception' => $exception->getMessage(),
+            ]);
+
+            return response()->json([
+                'error' => 'An unexpected error occurred while deleting the item.'
+            ], 500);
         }
-        
-        $inventoryItem->stockLevels()->delete();
-        $inventoryItem->delete();
-        
-        return response()->json(['message' => 'Item deleted successfully.'], 200);
     }
 }
