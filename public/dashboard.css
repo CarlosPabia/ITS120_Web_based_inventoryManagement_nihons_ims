@@ -137,6 +137,18 @@
     background-color: #6a4f3f; /* Slightly lighter brown */
 }
 
+.mini-summary-list {
+    list-style: none;
+    margin: 10px 0 0;
+    padding: 0;
+    font-size: 13px;
+    color: #555;
+}
+
+.mini-summary-list li {
+    margin-bottom: 4px;
+}
+
 .close-btn {
     position: absolute;
     top: 10px;
@@ -244,35 +256,45 @@
     white-space: nowrap;
 }
 
-.inventory-chart-placeholder {
-    /* Matches the look of the bar chart in the photo */
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-around;
-    height: 150px;
-    padding: 10px 0;
+.inventory-chart-container,
+.sales-chart-container {
+    position: relative;
+    min-height: 190px;
     background-color: #f7f7f7;
-    border-radius: 5px;
-}
-
-.bar-set {
+    border-radius: 6px;
+    padding: 12px;
     display: flex;
-    gap: 5px;
-    height: 100%;
-    align-items: flex-end;
+    align-items: center;
+    justify-content: center;
 }
 
-.bar {
-    width: 10px;
-    background-color: var(--color-primary-dark);
-    border-radius: 2px 2px 0 0;
-    transition: height 0.5s;
+.inventory-chart-container canvas,
+.sales-chart-container canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.chart-empty {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 13px;
+    color: #777;
+    padding: 0 20px;
+    pointer-events: none;
+}
+
+.chart-empty.hidden {
+    display: none;
 }
 
 /* --- Sales & Orders Overview Card --- */
 .summary-details-grid {
     display: grid;
-    grid-template-columns: 1fr 100px; /* List takes more space than the pie chart */
+    grid-template-columns: 1fr 160px; /* List takes more space than the pie chart */
     gap: 15px;
     margin-bottom: 20px;
 }

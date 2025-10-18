@@ -3,16 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Nihon Café</title>
-    
-    <!-- External styles -->
+    <title>Dashboard - Nihon Cafe</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('main.css') }}">
     <link rel="stylesheet" href="{{ asset('dashboard.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <body>
-
-    <!-- Top navbar -->
     <nav class="navbar">
         <div class="navbar-left">
             <img src="{{ asset('logo.png') }}" alt="Nihon Cafe Logo" class="logo">
@@ -22,7 +18,9 @@
             <div class="user-dropdown">
                 <div class="user-profile-trigger">
                     <img src="{{ asset('user.png') }}" alt="User Avatar" class="profile-avatar">
-                    <span class="profile-name">Peter Parks</span>
+                    <span class="profile-name">
+                        @auth {{ Auth::user()->first_name }} {{ Auth::user()->last_name }} @endauth
+                    </span>
                     <i class="fas fa-chevron-down dropdown-icon"></i>
                 </div>
                 <div class="dropdown-content">
@@ -37,183 +35,208 @@
         </div>
     </nav>
 
-    <!-- Sidebar + Content -->
     <div class="app-container">
-
-        <!-- Sidebar -->
         <nav id="sidebar" class="sidebar">
             <div class="sidebar-header-placeholder"></div>
             <ul class="nav-links">
                 <li class="nav-item sidebar-title-item">
-                    <a href="{{ route('dashboard') }}" class="nav-link {{ Route::is('dashboard') ? 'active' : '' }}">
+                    <a href="{{ route('dashboard') }}" class="nav-link active">
                         <i class="fas fa-chart-line"></i> Dashboard
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{ route('orders.index') }}" class="nav-link {{ Route::is('orders.index') ? 'active' : '' }}">
-                        <i class="fas fa-shopping-cart"></i> Orders
+                    <a href="{{ route('orders.index') }}" class="nav-link">
+                        <i class="fas fa-clipboard-list"></i> Orders
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{ route('inventory.index') }}" class="nav-link {{ Route::is('inventory.index') ? 'active' : '' }}">
+                    <a href="{{ route('inventory.index') }}" class="nav-link">
                         <i class="fas fa-boxes"></i> Inventory
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{ route('suppliers.index') }}" class="nav-link {{ Route::is('suppliers.index') ? 'active' : '' }}">
+                    <a href="{{ route('suppliers.index') }}" class="nav-link">
                         <i class="fas fa-truck"></i> Suppliers
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{ route('reports.index') }}" class="nav-link {{ Route::is('reports.index') ? 'active' : '' }}">
+                    <a href="{{ route('reports.index') }}" class="nav-link">
                         <i class="fas fa-file-alt"></i> Reports
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a href="{{ route('settings.index') }}" class="nav-link {{ Route::is('settings.index') ? 'active' : '' }}">
+                <li class="nav-item settings-separator">
+                    <a href="{{ route('settings.index') }}" class="nav-link">
                         <i class="fas fa-cog"></i> Settings
                     </a>
                 </li>
             </ul>
         </nav>
 
-        <!-- Main content area -->
-        <main class="content-area">
-            <section id="dashboard-view" class="view">
+        <main class="content-area dashboard-page">
+            <header class="content-header dashboard-header">
+                <div class="dashboard-title-box">Dashboard</div>
+            </header>
 
-                <div class="dashboard-controls">
-                    <div class="search-bar">
-                        <i class="fas fa-search"></i>
-                        <input type="text" placeholder="Search Inventory, Orders, or Suppliers...">
+            <div class="dashboard-search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search Inventory, Orders, or Suppliers..." class="search-input">
+                <a href="{{ route('settings.index') }}#access-control" class="access-security-link">
+                    <i class="fas fa-lock"></i> Access & Security
+                </a>
+            </div>
+
+            @php
+                $inventorySummary = $inventorySummary ?? ['total_quantity' => 0, 'sku_count' => 0, 'total_value' => 0];
+                $lowStockItems = $lowStockItems ?? [];
+                $availableStock = $availableStock ?? [];
+                $availableStockChart = $availableStockChart ?? [];
+                $salesChartData = array_slice($topSellingItems ?? [], 0, 5);
+                $weeklySales = $weeklySales ?? ['total_orders' => 0, 'completed_orders' => 0, 'total_revenue_raw' => 0, 'total_revenue' => '0.00', 'start_date' => null, 'end_date' => null];
+                $monthlySales = $monthlySales ?? ['total_orders' => 0, 'completed_orders' => 0, 'total_revenue_raw' => 0, 'total_revenue' => '0.00', 'start_date' => null, 'end_date' => null];
+                $topSellingItems = $topSellingItems ?? [];
+                $pendingOrdersList = collect($pendingOrders ?? []);
+                $pendingOrdersTotal = $pendingOrdersCount ?? $pendingOrdersList->count();
+                $formatCurrency = static function ($amount) {
+                    return "\u{20B1}" . number_format((float) $amount, 2);
+                };
+            @endphp
+
+
+            <section class="dashboard-grid-1">
+                <div class="card summary-box inventory-summary-card">
+                    <button class="close-btn" type="button"><i class="fas fa-times"></i></button>
+                    <h4>Inventory Summary</h4>
+                    <div class="summary-content">
+                        <span class="main-metric">{{ number_format((float) $inventorySummary['total_quantity']) }}</span>
+                        <div class="sub-metric">
+                            <p class="sub-metric-value">Total Value:</p>
+                            <p class="sub-metric-label">{{ $formatCurrency($inventorySummary['total_value']) }}</p>
+                        </div>
+                        <p class="sub-metric-label">{{ number_format((int) $inventorySummary['sku_count']) }} items</p>
                     </div>
-                    <a href="{{ route('settings.index') }}" class="security-btn">
-                        <i class="fas fa-shield-alt"></i> Access & Security
-                    </a>
+                    <a href="{{ route('inventory.index') }}" class="review-btn">Review</a>
                 </div>
 
-                <div class="summary-cards-grid">
-                    <div class="card summary-card">
-                        <h3>Inventory Summary</h3>
-                        <div class="card-content">
-                            <i class="fas fa-chart-pie summary-icon"></i>
-                            <div class="summary-details">
-                                <strong>152</strong>
-                                <p>Total Value:</p>
-                                <p>152 items</p>
-                            </div>
+                <div class="card summary-box low-stock-card">
+                    <button class="close-btn" type="button"><i class="fas fa-times"></i></button>
+                    <h4>Low Stock Items</h4>
+                    <div class="summary-content">
+                        <i class="fas fa-exclamation-triangle warning-icon"></i>
+                        <span class="main-metric">{{ number_format((int) $lowStockCount) }}</span>
+                        <div class="sub-metric">
+                            <p class="sub-metric-value">Critical Items</p>
+                            <p class="sub-metric-label">{{ number_format(count($lowStockItems)) }} shown</p>
                         </div>
-                        <a href="{{ route('inventory.index') }}" class="review-btn">review</a>
                     </div>
+                    @if(count($lowStockItems))
+                        <ul class="mini-summary-list">
+                            @foreach($lowStockItems as $item)
+                                <li>{{ $item['name'] }} ({{ number_format($item['quantity']) }}/{{ number_format($item['threshold']) }})</li>
+                            @endforeach
+                        </ul>
+                    @else
+                        <p class="sub-metric-label">All stock levels are healthy.</p>
+                    @endif
+                    <a href="{{ route('inventory.index') }}" class="review-btn">Review</a>
+                </div>
 
-                    <div class="card summary-card">
-                        <h3>Low Stock Items</h3>
-                        <div class="card-content">
-                            <i class="fas fa-exclamation-triangle summary-icon alert"></i>
-                            <div class="summary-details">
-                                <strong>12</strong>
-                                <p>Total Value:</p>
-                                <p>12 items</p>
-                            </div>
-                        </div>
-                        <a href="{{ route('inventory.index') }}" class="review-btn">review</a>
+                <div class="card summary-box pending-orders-card">
+                    <button class="close-btn" type="button"><i class="fas fa-times"></i></button>
+                    <h4>Pending Orders</h4>
+                    <div class="summary-content">
+                        <i class="fas fa-box-open order-icon"></i>
+                        <span class="main-metric">{{ number_format((int) $pendingOrdersTotal) }}</span>
+                        <p class="sub-metric-label">{{ number_format($pendingOrdersList->count()) }} orders pending</p>
                     </div>
+                    @if($pendingOrdersList->isNotEmpty())
+                        <ul class="mini-summary-list">
+                            @foreach($pendingOrdersList->take(4) as $order)
+                                <li>{{ $order['display_id'] }} Â· {{ $order['supplier'] }} Â· {{ $order['order_date'] }}</li>
+                            @endforeach
+                        </ul>
+                    @else
+                        <p class="sub-metric-label">No supplier orders awaiting processing.</p>
+                    @endif
+                    <a href="{{ route('orders.index') }}" class="review-btn">Review</a>
+                </div>
+            </section>
 
-                    <div class="card summary-card">
-                        <h3>Pending Orders</h3>
-                        <div class="card-content">
-                            <i class="fas fa-hourglass-half summary-icon"></i>
-                            <div class="summary-details">
-                                <strong>5</strong>
-                                <p>5 orders pending</p>
-                            </div>
+            <section class="dashboard-grid-2">
+                <div class="card inventory-overview-card">
+                    <div class="card-header">
+                        <h3>Inventory Overview</h3>
+                        <a href="{{ route('reports.index') }}#inventory" class="view-reports-link">View Reports</a>
+                    </div>
+                    <div class="inventory-content-grid">
+                        <div class="available-stocks">
+                            <p class="list-title">Available Stocks</p>
+                            <ul class="stock-list">
+                                @forelse($availableStock as $name)
+                                    <li>{{ $name }}</li>
+                                @empty
+                                    <li>No inventory on hand.</li>
+                                @endforelse
+                            </ul>
                         </div>
-                        <a href="{{ route('orders.index') }}" class="review-btn">review</a>
+                        <div class="inventory-chart-container">
+                            <canvas id="inventoryBarChart"></canvas>
+                            <p class="chart-empty hidden" data-empty-target="inventory">No recent stock movement to display.</p>
+                        </div>
                     </div>
                 </div>
 
-                <div class="dashboard-overview-grid">
-
-                    <div class="card overview-card inventory-overview-card">
-                        <div class="card-header">
-                            <h3>Inventory Overview</h3>
-                            <a href="{{ route('inventory.index') }}" class="view-reports-link">View Reports</a>
+                <div class="card sales-overview-card">
+                    <div class="card-header">
+                        <h3>Sales & Orders Overview</h3>
+                        <a href="{{ route('reports.index') }}#sales" class="view-reports-link">View Reports</a>
+                    </div>
+                    <div class="summary-details-grid">
+                        <div class="weekly-monthly-summary">
+                            <p class="list-title">Weekly / Monthly Summary</p>
+                            <ul class="summary-list">
+                                <li>Total Orders (week): <span>{{ number_format((int) $weeklySales['total_orders']) }}</span></li>
+                                <li>Total Sales (week): <span>{{ $formatCurrency($weeklySales['total_revenue_raw']) }}</span></li>
+                                <li>Completed Orders (week): <span>{{ number_format((int) $weeklySales['completed_orders']) }}</span></li>
+                                <li class="separator"></li>
+                                <li>Total Orders (month): <span>{{ number_format((int) $monthlySales['total_orders']) }}</span></li>
+                                <li>Total Sales (month): <span>{{ $formatCurrency($monthlySales['total_revenue_raw']) }}</span></li>
+                                <li>Completed Orders (month): <span>{{ number_format((int) $monthlySales['completed_orders']) }}</span></li>
+                            </ul>
                         </div>
-                        <div class="inventory-overview-content">
-                            <div class="stock-list-grid">
-                                <ul>
-                                    <li>Matcha Powder</li>
-                                    <li>Coffee Beans</li>
-                                    <li>Fresh Milk</li>
-                                    <li>Cheesecake</li>
-                                </ul>
-                                <ul>
-                                    <li>Green Tea Leaves</li>
-                                    <li>Soy Milk</li>
-                                    <li>Croissant Dough</li>
-                                    <li>Chocolate Syrup</li>
-                                </ul>
-                            </div>
-                            <div class="bar-chart-container">
-                                <div class="bar" style="height: 70%;"></div>
-                                <div class="bar" style="height: 90%;"></div>
-                                <div class="bar" style="height: 50%;"></div>
-                                <div class="bar" style="height: 80%;"></div>
-                            </div>
+                        <div class="sales-chart-container">
+                            <canvas id="salesPieChart"></canvas>
+                            <p class="chart-empty hidden" data-empty-target="sales">No sales data to display.</p>
                         </div>
                     </div>
-
-                    <div class="card overview-card sales-orders-overview-card">
-                        <div class="card-header">
-                            <h3>Sales & Orders Overview</h3>
-                            <a href="{{ route('reports.index') }}" class="view-reports-link">View Reports</a>
-                        </div>
-
-                        <div class="sales-overview-content">
-                            <div class="sales-details-container">
-                                <h4>Monthly Summary</h4>
-                                <p>Total Orders: <strong>540</strong></p>
-                                <p>Total Sales: <strong>₱420,300.00</strong></p>
-                                <p>Completed Orders: <strong>522</strong></p>
-                            </div>
-                            <div class="pie-chart-container">
-                                <div class="pie-chart-placeholder-actual"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card overview-card top-selling-items-card">
-                        <h3>Top 3 Selling Items</h3>
-                        <ul>
-                            <li>• Caffé Latte</li>
-                            <li>• Matcha Latte</li>
-                            <li>• Croissant</li>
+                    <div class="top-selling-items">
+                        <p class="list-title">Top Selling Items</p>
+                        <ul class="selling-list">
+                            @forelse(array_slice($salesChartData, 0, 3) as $item)
+                                <li>{{ $loop->iteration }}. {{ $item['name'] }} <span>{{ number_format($item['quantity']) }}</span></li>
+                            @empty
+                                <li>No sales recorded for the current period.</li>
+                            @endforelse
                         </ul>
                     </div>
                 </div>
-
-               
             </section>
+
+            
         </main>
     </div>
 
-    <!-- User dropdown interaction -->
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const userDropdown = document.querySelector('.user-dropdown');
-            const dropdownContent = userDropdown.querySelector('.dropdown-content');
-
-            userDropdown.addEventListener('click', function (event) {
-                event.stopPropagation();
-                dropdownContent.classList.toggle('show');
-            });
-
-            window.addEventListener('click', function (event) {
-                if (!userDropdown.contains(event.target)) {
-                    dropdownContent.classList.remove('show');
-                }
-            });
-        });
+        window.dashboardData = {
+            inventoryBar: @json($availableStockChart),
+            salesPie: @json($salesChartData),
+        };
     </script>
-
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
+    <script src="{{ asset('js/dashboard.js') }}" defer></script>
 </body>
 </html>
+
+
+
+
+

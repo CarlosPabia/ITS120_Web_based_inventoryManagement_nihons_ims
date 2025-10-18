@@ -163,6 +163,95 @@
     font-weight: 700;
 }
 
+.report-filter-form {
+    margin: 0 25px 20px 25px;
+}
+
+.filter-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: flex-end;
+}
+
+.filter-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 160px;
+    font-size: 13px;
+    color: var(--color-text-dark);
+}
+
+.filter-field input,
+.filter-field select {
+    padding: 8px 10px;
+    border: 1px solid var(--color-light-grey-border);
+    border-radius: 6px;
+    background-color: var(--color-white);
+    font-size: 14px;
+}
+
+.filter-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.filter-actions .primary-btn,
+.filter-actions .secondary-btn {
+    border-radius: 999px;
+    padding: 10px 22px;
+    font-size: 14px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 110px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.filter-actions .primary-btn {
+    background: linear-gradient(135deg, var(--color-primary) 0%, #6b3c2f 100%);
+    color: var(--color-white);
+    border: none;
+    box-shadow: 0 8px 16px rgba(107, 60, 47, 0.25);
+}
+
+.filter-actions .primary-btn:hover,
+.filter-actions .primary-btn:focus-visible {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 20px rgba(107, 60, 47, 0.3);
+}
+
+.filter-actions .secondary-btn {
+    border: 1px solid var(--color-primary);
+    color: var(--color-primary);
+    background: rgba(107, 60, 47, 0.08);
+    text-decoration: none;
+}
+
+.filter-actions .secondary-btn:hover,
+.filter-actions .secondary-btn:focus-visible {
+    background: rgba(107, 60, 47, 0.15);
+    color: var(--color-primary);
+    transform: translateY(-1px);
+}
+
+.filter-actions .secondary-btn:focus-visible,
+.filter-actions .primary-btn:focus-visible {
+    outline: 2px solid rgba(107, 60, 47, 0.3);
+    outline-offset: 2px;
+}
+
+.report-summary {
+    margin: 20px 25px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    font-size: 14px;
+    color: var(--color-text-dark);
+}
+
 .hidden {
     display: none !important;
 }

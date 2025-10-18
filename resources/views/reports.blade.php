@@ -78,27 +78,79 @@
                 <div id="report-details-container" class="report-details-container hidden">
 
                     <div id="sales-report" class="report-detail-card card hidden">
-                        <h3 class="report-title">ORDER REPORT (SALES PERFORMANCE)</h3>
+                        <h3 class="report-title">ORDER REPORT (NIHON CAFE SALES PERFORMANCE)</h3>
+
+                        <form method="GET" action="{{ route('reports.index') }}" class="report-filter-form">
+                            <div class="filter-grid">
+                                <label class="filter-field">
+                                    <span>Start Date</span>
+                                    <input type="date" name="start_date" value="{{ $internalSalesFilters['start_date'] ?? '' }}">
+                                </label>
+                                <label class="filter-field">
+                                    <span>End Date</span>
+                                    <input type="date" name="end_date" value="{{ $internalSalesFilters['end_date'] ?? '' }}">
+                                </label>
+                                <label class="filter-field">
+                                    <span>Top Results</span>
+                                    <select name="top">
+                                        @foreach([5,10,15,20,50] as $option)
+                                            <option value="{{ $option }}" @selected(($internalSalesFilters['top'] ?? 10) == $option)>Top {{ $option }}</option>
+                                        @endforeach
+                                    </select>
+                                </label>
+                                <div class="filter-actions">
+                                    <button type="submit" class="primary-btn">Apply</button>
+                                    <a href="{{ route('reports.index') }}" class="secondary-btn outline-btn">Reset</a>
+                                </div>
+                            </div>
+                        </form>
+
                         <table class="data-table report-table">
                             <thead>
                                 <tr>
                                     <th>Item Name</th>
-                                    <th>Category</th>
-                                    <th>Quantity Sold</th>
-                                    <th>Total Sales</th>
-                                    <th>Best Seller Rank</th>
-                                    <th>Date Range</th>
+                                    <th>Brand</th>
+                                    <th style="text-align:right;">Quantity Sold</th>
+                                    <th style="text-align:right;">Total Sales</th>
+                                    <th style="text-align:center;">Best Seller Rank</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr><td>Matcha Latte</td><td>Latte</td><td>150</td><td>&#8369;7,500</td><td><span class="status-best">#1</span></td><td>Sept 1-7</td></tr>
-                                <tr><td>Coffee Beans</td><td>Arabica</td><td>120</td><td>&#8369;6,000</td><td><span class="status-normal">#2</span></td><td>Sept 1-7</td></tr>
-                                <tr><td>Milk Carton</td><td>Dairy</td><td>80</td><td>&#8369;4,000</td><td><span class="status-normal">#3</span></td><td>Sept 1-7</td></tr>
-                                <tr><td>Cappuccino Mix</td><td>Medium Roast</td><td>60</td><td>&#8369;3,000</td><td><span class="status-normal">#4</span></td><td>Sept 1-7</td></tr>
-                                <tr><td>Americano Pack</td><td>Dark Roast</td><td>40</td><td>&#8369;3,000</td><td><span class="status-normal">#5</span></td><td>Sept 1-7</td></tr>
-                                <tr><td>Matcha Powder</td><td>Japanese</td><td>30</td><td>&#8369;3,000</td><td><span class="status-normal">#6</span></td><td>Sept 1-7</td></tr>
+                                @if(!($internalSales['supplier_found'] ?? false))
+                                    <tr>
+                                        <td colspan="5" style="text-align:center; padding:20px;">
+                                            No internal supplier was found. Add the Nihon Cafe supplier to view this report.
+                                        </td>
+                                    </tr>
+                                @else
+                                    @forelse(($internalSales['rows'] ?? collect()) as $row)
+                                        <tr>
+                                            <td>{{ $row['item_name'] }}</td>
+                                            <td>{{ $row['category'] }}</td>
+                                            <td style="text-align:right;">{{ number_format($row['quantity_sold']) }}</td>
+                                            <td style="text-align:right;">&#8369;{{ number_format($row['total_sales'], 2) }}</td>
+                                            <td style="text-align:center;">
+                                                <span class="{{ $row['rank'] === 1 ? 'status-best' : 'status-normal' }}">#{{ $row['rank'] }}</span>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="5" style="text-align:center; padding:20px;">
+                                                No orders found for the selected period.
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                @endif
                             </tbody>
                         </table>
+
+                        @if(($internalSales['supplier_found'] ?? false) && ($internalSales['rows']->count() ?? 0) > 0)
+                            <div class="report-summary">
+                                <p><strong>Total Quantity Sold:</strong> {{ number_format($internalSales['total_quantity']) }} units</p>
+                                <p><strong>Total Sales:</strong> &#8369;{{ number_format($internalSales['total_sales'], 2) }}</p>
+                                <p><strong>Reporting Window:</strong> {{ $internalSalesFilters['start_date'] ?? '' }} to {{ $internalSalesFilters['end_date'] ?? '' }}</p>
+                            </div>
+                        @endif
                     </div>
 
                     <div id="supplier-report" class="report-detail-card card hidden">
@@ -114,9 +166,23 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr><td>Kyoto Imports</td><td>+81 03-0000-0000</td><td>42</td><td>96%</td><td>2025-10-12</td></tr>
-                                <tr><td>BakeHouse Corp.</td><td>+33 1 555 0100</td><td>36</td><td>91%</td><td>2025-10-10</td></tr>
-                                <tr><td>DairyPure Co.</td><td>+1 555 0199</td><td>27</td><td>89%</td><td>2025-10-07</td></tr>
+                                @forelse($supplierPerformance as $supplier)
+                                    <tr>
+                                        <td>{{ $supplier['name'] }}</td>
+                                        <td>{{ $supplier['contact'] }}</td>
+                                        <td>{{ number_format($supplier['total_orders']) }}</td>
+                                        <td>
+                                            {{ $supplier['on_time_rate'] !== null ? $supplier['on_time_rate'] . '%' : '—' }}
+                                        </td>
+                                        <td>{{ $supplier['last_delivery'] }}</td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" style="text-align:center; padding:20px;">
+                                            No supplier performance data available yet.
+                                        </td>
+                                    </tr>
+                                @endforelse
                             </tbody>
                         </table>
                     </div>
