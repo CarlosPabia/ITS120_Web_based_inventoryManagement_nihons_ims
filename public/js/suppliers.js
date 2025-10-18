@@ -9,6 +9,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const addCatalogNameInput = document.getElementById('add-catalog-name');
     const addCatalogUnitInput = document.getElementById('add-catalog-unit');
+    const addCatalogQuantityInput = document.getElementById('add-catalog-quantity');
+    const addCatalogThresholdInput = document.getElementById('add-catalog-threshold');
+    const addCatalogPriceInput = document.getElementById('add-catalog-price');
     const addCatalogDescriptionInput = document.getElementById('add-catalog-description');
     const addCatalogList = document.getElementById('add-catalog-list');
     const addCatalogAddBtn = document.getElementById('add-catalog-add-btn');
@@ -20,6 +23,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const inactiveToggleBtn = statusToggle.querySelector('[data-status="0"]');
     const editCatalogNameInput = document.getElementById('edit-catalog-name');
     const editCatalogUnitInput = document.getElementById('edit-catalog-unit');
+    const editCatalogQuantityInput = document.getElementById('edit-catalog-quantity');
+    const editCatalogThresholdInput = document.getElementById('edit-catalog-threshold');
+    const editCatalogPriceInput = document.getElementById('edit-catalog-price');
     const editCatalogDescriptionInput = document.getElementById('edit-catalog-description');
     const editCatalogAddBtn = document.getElementById('edit-catalog-add-btn');
     const editCatalogList = document.getElementById('edit-catalog-list');
@@ -46,10 +52,96 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function formatUnit(unit) {
         if (!unit) {
-            return '-';
+            return '';
         }
         const trimmed = unit.toString().trim();
-        return trimmed.length ? trimmed : '-';
+        return trimmed.length ? trimmed : '';
+    }
+
+    function formatCatalogLabel(name, unit) {
+        const normalised = formatUnit(unit);
+        return normalised ? `${name} (${normalised})` : name;
+    }
+
+    function parseOptionalNumber(rawValue) {
+        if (rawValue === null || rawValue === undefined) {
+            return null;
+        }
+
+        const trimmed = rawValue.toString().trim();
+        if (!trimmed.length) {
+            return null;
+        }
+
+        const parsed = Number.parseFloat(trimmed);
+        if (Number.isNaN(parsed)) {
+            return NaN;
+        }
+
+        return Math.round(parsed * 100) / 100;
+    }
+
+    function formatNumericDisplay(value) {
+        if (value === null || value === undefined) {
+            return null;
+        }
+
+        const numeric = Number(value);
+        if (Number.isNaN(numeric)) {
+            return null;
+        }
+
+        if (Number.isInteger(numeric)) {
+            return numeric.toString();
+        }
+
+        return numeric.toFixed(2).replace(/\.?0+$/, '');
+    }
+
+    function buildCatalogMeta(quantity, threshold, price) {
+        const parts = [];
+        const priceText = formatNumericDisplay(price);
+        const quantityText = formatNumericDisplay(quantity);
+        const thresholdText = formatNumericDisplay(threshold);
+
+        if (priceText !== null) {
+            parts.push(`Price: ${priceText}`);
+        }
+
+        if (quantityText !== null) {
+            parts.push(`Qty: ${quantityText}`);
+        }
+
+        if (thresholdText !== null) {
+            parts.push(`Min: ${thresholdText}`);
+        }
+
+        return parts.join(' | ');
+    }
+
+    function formatInputNumber(value) {
+        if (value === null || value === undefined || value === '') {
+            return '';
+        }
+
+        const numeric = Number(value);
+        if (Number.isNaN(numeric)) {
+            return '';
+        }
+
+        return numeric.toFixed(2);
+    }
+
+    function extractQuantityFields(source) {
+        const hasQuantity = Object.prototype.hasOwnProperty.call(source, 'quantity');
+        const hasInitialQuantity = Object.prototype.hasOwnProperty.call(source, 'initial_quantity');
+        const hasThreshold = Object.prototype.hasOwnProperty.call(source, 'threshold');
+        const hasMinimumThreshold = Object.prototype.hasOwnProperty.call(source, 'minimum_stock_threshold');
+
+        return {
+            quantity: hasQuantity ? source.quantity : (hasInitialQuantity ? source.initial_quantity : null),
+            threshold: hasThreshold ? source.threshold : (hasMinimumThreshold ? source.minimum_stock_threshold : null),
+        };
     }
 
     function renderCards(suppliers) {
@@ -72,7 +164,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const items = Array.isArray(supplier.items) ? supplier.items : [];
             const catalogHtml = items.length
-                ? `<ul class="supplier-item-list">${items.map(item => `<li>${item.name} (${formatUnit(item.unit)})</li>`).join('')}</ul>`
+                ? `<ul class="supplier-item-list">${items.map(item => {
+                        const { quantity, threshold } = extractQuantityFields(item);
+                        const priceSource = Object.prototype.hasOwnProperty.call(item, 'default_price') ? item.default_price : item.price;
+                        const meta = buildCatalogMeta(quantity, threshold, priceSource);
+                        const baseLabel = formatCatalogLabel(item.name, item.unit);
+                        const metaHtml = meta ? ` - <span class="supplier-item-meta">${meta}</span>` : '';
+                        const descriptionHtml = item.description
+                            ? `<div class="supplier-item-desc">${item.description}</div>`
+                            : '';
+
+                        return `<li><div class="supplier-item-line">${baseLabel}${metaHtml}</div>${descriptionHtml}</li>`;
+                    }).join('')}</ul>`
                 : '<p class="supplier-no-items">No catalog items assigned yet.</p>';
 
             const card = document.createElement('div');
@@ -103,6 +206,11 @@ document.addEventListener('DOMContentLoaded', () => {
         addCatalogNewItems = [];
         addCatalogNameInput.value = '';
         addCatalogUnitInput.value = '';
+        addCatalogQuantityInput.value = '';
+        addCatalogThresholdInput.value = '';
+        if (addCatalogPriceInput) {
+            addCatalogPriceInput.value = '';
+        }
         addCatalogDescriptionInput.value = '';
         renderAddCatalogList();
     }
@@ -118,12 +226,37 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         addCatalogList.innerHTML = addCatalogNewItems
-            .map((item, index) => `
-                <li class="catalog-entry">
-                    <span>${item.name} (${formatUnit(item.unit)})</span>
-                    <button type="button" class="catalog-remove-btn" data-context="add" data-index="${index}">×</button>
-                </li>
-            `)
+            .map((item, index) => {
+                const { quantity, threshold } = extractQuantityFields(item);
+                const meta = buildCatalogMeta(quantity, threshold, null);
+                const metaHtml = meta ? `<br><small class="catalog-entry-meta">${meta}</small>` : '';
+                const descriptionHtml = item.description
+                    ? `<br><small class="catalog-entry-desc">${item.description}</small>`
+                    : '';
+                const priceEditorHtml = `
+                    <div class="catalog-entry-price-editor">
+                        <span class="catalog-entry-price-label">Price</span>
+                        <input type="number"
+                               class="catalog-entry-price-input"
+                               data-context="add"
+                               data-index="${index}"
+                               min="0"
+                               step="0.01"
+                               value="${formatInputNumber(item.price)}">
+                    </div>`;
+
+                return `
+                    <li class="catalog-entry">
+                        <span>
+                            ${formatCatalogLabel(item.name, item.unit)}
+                            ${metaHtml}
+                            ${priceEditorHtml}
+                            ${descriptionHtml}
+                        </span>
+                        <button type="button" class="catalog-remove-btn" data-context="add" data-index="${index}">x</button>
+                    </li>
+                `;
+            })
             .join('');
     }
 
@@ -138,47 +271,179 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const existingHtml = editCatalogExistingItems
-            .map((item, index) => `
-                <li class="catalog-entry">
-                    <span>${item.name} (${formatUnit(item.unit)})</span>
-                    <button type="button" class="catalog-remove-btn" data-context="existing" data-index="${index}">×</button>
-                </li>
-            `)
+            .map((item, index) => {
+                const { quantity, threshold } = extractQuantityFields(item);
+                const meta = buildCatalogMeta(quantity, threshold, null);
+                const metaHtml = meta ? `<br><small class="catalog-entry-meta">${meta}</small>` : '';
+                const descriptionHtml = item.description
+                    ? `<br><small class="catalog-entry-desc">${item.description}</small>`
+                    : '';
+                const priceEditorHtml = `
+                    <div class="catalog-entry-price-editor">
+                        <span class="catalog-entry-price-label">Price</span>
+                        <input type="number"
+                               class="catalog-entry-price-input"
+                               data-context="existing"
+                               data-index="${index}"
+                               min="0"
+                               step="0.01"
+                               value="${formatInputNumber(item.price)}">
+                    </div>`;
+
+                return `
+                    <li class="catalog-entry">
+                        <span>
+                            ${formatCatalogLabel(item.name, item.unit)}
+                            ${metaHtml}
+                            ${priceEditorHtml}
+                            ${descriptionHtml}
+                        </span>
+                        <button type="button" class="catalog-remove-btn" data-context="existing" data-index="${index}">x</button>
+                    </li>
+                `;
+            })
             .join('');
 
         const newHtml = editCatalogNewItems
-            .map((item, index) => `
-                <li class="catalog-entry is-new">
-                    <span>${item.name} (${formatUnit(item.unit)}) <em>(new)</em></span>
-                    <button type="button" class="catalog-remove-btn" data-context="new" data-index="${index}">×</button>
-                </li>
-            `)
+            .map((item, index) => {
+                const { quantity, threshold } = extractQuantityFields(item);
+                const meta = buildCatalogMeta(quantity, threshold, null);
+                const metaHtml = meta ? `<br><small class="catalog-entry-meta">${meta}</small>` : '';
+                const descriptionHtml = item.description
+                    ? `<br><small class="catalog-entry-desc">${item.description}</small>`
+                    : '';
+                const priceEditorHtml = `
+                    <div class="catalog-entry-price-editor">
+                        <span class="catalog-entry-price-label">Price</span>
+                        <input type="number"
+                               class="catalog-entry-price-input"
+                               data-context="new"
+                               data-index="${index}"
+                               min="0"
+                               step="0.01"
+                               value="${formatInputNumber(item.price)}">
+                    </div>`;
+
+                return `
+                    <li class="catalog-entry is-new">
+                        <span>
+                            ${formatCatalogLabel(item.name, item.unit)} <em>(new)</em>
+                            ${metaHtml}
+                            ${priceEditorHtml}
+                            ${descriptionHtml}
+                        </span>
+                        <button type="button" class="catalog-remove-btn" data-context="new" data-index="${index}">x</button>
+                    </li>
+                `;
+            })
             .join('');
 
         editCatalogList.innerHTML = existingHtml + newHtml;
     }
 
     function buildNewItemPayload(items) {
-        return items.map(item => ({
-            name: item.name,
-            unit: item.unit,
-            description: item.description || null,
-        }));
+        return items.map(item => {
+            const description = item.description ? item.description.trim() : '';
+            const payload = {
+                name: item.name,
+                unit: formatUnit(item.unit) || null,
+                description: description.length ? description : null,
+            };
+
+            const { quantity, threshold } = extractQuantityFields(item);
+
+            if (quantity !== null && !Number.isNaN(quantity)) {
+                payload.initial_quantity = quantity;
+            }
+
+            if (threshold !== null && !Number.isNaN(threshold)) {
+                payload.minimum_stock_threshold = threshold;
+            }
+
+            if (typeof item.price === 'number' && !Number.isNaN(item.price)) {
+                payload.price = item.price;
+            }
+
+            return payload;
+        });
+    }
+
+    function assignPriceValueToContext(context, index, value) {
+        let target = null;
+
+        if (context === 'add') {
+            target = addCatalogNewItems;
+        } else if (context === 'existing') {
+            target = editCatalogExistingItems;
+        } else if (context === 'new') {
+            target = editCatalogNewItems;
+        }
+
+        if (!target || !Array.isArray(target) || !target[index]) {
+            return;
+        }
+
+        target[index].price = value;
     }
 
     addCatalogAddBtn.addEventListener('click', () => {
         const name = addCatalogNameInput.value.trim();
         const unit = addCatalogUnitInput.value.trim();
         const description = addCatalogDescriptionInput.value.trim();
+        const quantityValue = parseOptionalNumber(addCatalogQuantityInput.value);
+        const thresholdValue = parseOptionalNumber(addCatalogThresholdInput.value);
+        const priceValue = parseOptionalNumber(addCatalogPriceInput ? addCatalogPriceInput.value : null);
 
-        if (!name || !unit) {
-            alert('Provide both name and unit for the catalog item.');
+        if (!name) {
+            alert('Provide a catalog item name.');
             return;
         }
 
-        addCatalogNewItems.push({ name, unit, description });
+        if (Number.isNaN(quantityValue)) {
+            alert('Initial quantity must be a valid number.');
+            return;
+        }
+
+        if (quantityValue !== null && quantityValue < 0) {
+            alert('Initial quantity cannot be negative.');
+            return;
+        }
+
+        if (Number.isNaN(thresholdValue)) {
+            alert('Minimum threshold must be a valid number.');
+            return;
+        }
+
+        if (thresholdValue !== null && thresholdValue < 0) {
+            alert('Minimum threshold cannot be negative.');
+            return;
+        }
+
+        if (priceValue === null || Number.isNaN(priceValue)) {
+            alert('Provide a valid default price.');
+            return;
+        }
+
+        if (priceValue < 0) {
+            alert('Default price cannot be negative.');
+            return;
+        }
+
+        addCatalogNewItems.push({
+            name,
+            unit: formatUnit(unit),
+            quantity: quantityValue,
+            threshold: thresholdValue,
+            price: priceValue,
+            description,
+        });
         addCatalogNameInput.value = '';
         addCatalogUnitInput.value = '';
+        addCatalogQuantityInput.value = '';
+        addCatalogThresholdInput.value = '';
+        if (addCatalogPriceInput) {
+            addCatalogPriceInput.value = '';
+        }
         addCatalogDescriptionInput.value = '';
         renderAddCatalogList();
     });
@@ -200,15 +465,60 @@ document.addEventListener('DOMContentLoaded', () => {
         const name = editCatalogNameInput.value.trim();
         const unit = editCatalogUnitInput.value.trim();
         const description = editCatalogDescriptionInput.value.trim();
+        const quantityValue = parseOptionalNumber(editCatalogQuantityInput.value);
+        const thresholdValue = parseOptionalNumber(editCatalogThresholdInput.value);
+        const priceValue = parseOptionalNumber(editCatalogPriceInput ? editCatalogPriceInput.value : null);
 
-        if (!name || !unit) {
-            alert('Provide both name and unit for the catalog item.');
+        if (!name) {
+            alert('Provide a catalog item name.');
             return;
         }
 
-        editCatalogNewItems.push({ name, unit, description });
+        if (Number.isNaN(quantityValue)) {
+            alert('Initial quantity must be a valid number.');
+            return;
+        }
+
+        if (quantityValue !== null && quantityValue < 0) {
+            alert('Initial quantity cannot be negative.');
+            return;
+        }
+
+        if (Number.isNaN(thresholdValue)) {
+            alert('Minimum threshold must be a valid number.');
+            return;
+        }
+
+        if (thresholdValue !== null && thresholdValue < 0) {
+            alert('Minimum threshold cannot be negative.');
+            return;
+        }
+
+        if (priceValue === null || Number.isNaN(priceValue)) {
+            alert('Provide a valid default price.');
+            return;
+        }
+
+        if (priceValue < 0) {
+            alert('Default price cannot be negative.');
+            return;
+        }
+
+        editCatalogNewItems.push({
+            name,
+            unit: formatUnit(unit),
+            quantity: quantityValue,
+            threshold: thresholdValue,
+            price: priceValue,
+            description,
+        });
         editCatalogNameInput.value = '';
         editCatalogUnitInput.value = '';
+        editCatalogQuantityInput.value = '';
+        editCatalogThresholdInput.value = '';
+        if (editCatalogPriceInput) {
+            editCatalogPriceInput.value = '';
+        }
         editCatalogDescriptionInput.value = '';
         renderEditCatalogList();
     });
@@ -231,6 +541,38 @@ document.addEventListener('DOMContentLoaded', () => {
         renderEditCatalogList();
     });
 
+    function handleCatalogPriceInput(event) {
+        const priceInput = event.target.closest('.catalog-entry-price-input');
+        if (!priceInput) {
+            return;
+        }
+
+        const context = priceInput.dataset.context;
+        const index = Number(priceInput.dataset.index);
+        if (!context || Number.isNaN(index)) {
+            return;
+        }
+
+        const parsedValue = parseOptionalNumber(priceInput.value);
+
+        if (parsedValue === null || Number.isNaN(parsedValue) || parsedValue < 0) {
+            priceInput.classList.add('input-error');
+            assignPriceValueToContext(context, index, null);
+            return;
+        }
+
+        priceInput.classList.remove('input-error');
+        assignPriceValueToContext(context, index, parsedValue);
+    }
+
+    if (addCatalogList) {
+        addCatalogList.addEventListener('input', handleCatalogPriceInput);
+    }
+
+    if (editCatalogList) {
+        editCatalogList.addEventListener('input', handleCatalogPriceInput);
+    }
+
     async function handleAddFormSubmit(event) {
         event.preventDefault();
 
@@ -238,6 +580,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const payload = Object.fromEntries(formData.entries());
         payload.items = [];
         payload.new_items = buildNewItemPayload(addCatalogNewItems);
+
+        const hasInvalidPrices = addCatalogNewItems.some(item => typeof item.price !== 'number' || Number.isNaN(item.price));
+        if (hasInvalidPrices) {
+            alert('Provide a valid default price for each catalog item.');
+            return;
+        }
 
         try {
             const response = await fetch(API_URL, {
@@ -273,6 +621,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const payload = Object.fromEntries(formData.entries());
         payload.items = editCatalogExistingItems.map(item => item.id);
         payload.new_items = buildNewItemPayload(editCatalogNewItems);
+        const existingPricesInvalid = editCatalogExistingItems.some(item => typeof item.price !== 'number' || Number.isNaN(item.price));
+        const newPricesInvalid = editCatalogNewItems.some(item => typeof item.price !== 'number' || Number.isNaN(item.price));
+
+        if (existingPricesInvalid || newPricesInvalid) {
+            alert('Provide a valid default price for each catalog item.');
+            return;
+        }
+
+        payload.existing_items = editCatalogExistingItems.map(item => ({
+            id: item.id,
+            price: item.price,
+        }));
 
         try {
             const response = await fetch(`${API_URL}/${supplierId}`, {
@@ -338,6 +698,25 @@ document.addEventListener('DOMContentLoaded', () => {
             id: item.id,
             name: item.name,
             unit: formatUnit(item.unit),
+            quantity: (() => {
+                const { quantity } = extractQuantityFields(item);
+                const value = typeof quantity === 'number' ? quantity : parseOptionalNumber(quantity);
+                return Number.isNaN(value) ? null : value;
+            })(),
+            threshold: (() => {
+                const { threshold } = extractQuantityFields(item);
+                const value = typeof threshold === 'number' ? threshold : parseOptionalNumber(threshold);
+                return Number.isNaN(value) ? null : value;
+            })(),
+            price: (() => {
+                const raw = Object.prototype.hasOwnProperty.call(item, 'default_price') ? item.default_price : item.price;
+                const value = parseOptionalNumber(raw);
+                if (value === null || Number.isNaN(value)) {
+                    return null;
+                }
+                return value < 0 ? 0 : value;
+            })(),
+            description: item.description ? item.description.trim() : '',
         }));
         renderEditCatalogList();
 

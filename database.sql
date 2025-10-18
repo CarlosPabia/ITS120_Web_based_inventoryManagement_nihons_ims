@@ -1,4 +1,4 @@
--- 1. ROLES Table (For RBAC)
+﻿-- 1. ROLES Table (For RBAC)
 CREATE TABLE `roles` (
     `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     `role_name` VARCHAR(50) NOT NULL UNIQUE COMMENT 'e.g., Manager, Employee'
@@ -34,7 +34,8 @@ CREATE TABLE `inventory_items` (
     `item_name` VARCHAR(100) NOT NULL UNIQUE,
     `item_description` TEXT,
     `supplier_id` INT UNSIGNED,
-    `unit_of_measure` VARCHAR(20) NOT NULL,
+    `unit_of_measure` VARCHAR(20) NULL,
+    `default_unit_price` DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
     FOREIGN KEY (`supplier_id`) REFERENCES `suppliers`(`id`)
 );
 

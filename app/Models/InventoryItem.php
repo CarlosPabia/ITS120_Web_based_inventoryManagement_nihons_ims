@@ -16,7 +16,15 @@ class InventoryItem extends Model
     protected $table = 'inventory_items';
     
     protected $fillable = [
-        'item_name', 'item_description', 'supplier_id', 'unit_of_measure'
+        'item_name',
+        'item_description',
+        'supplier_id',
+        'unit_of_measure',
+        'default_unit_price',
+    ];
+
+    protected $casts = [
+        'default_unit_price' => 'decimal:2',
     ];
 
     public function supplier(): BelongsTo

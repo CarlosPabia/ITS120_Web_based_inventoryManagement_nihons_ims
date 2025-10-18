@@ -45,6 +45,7 @@ class InventoryController extends Controller
                     'id' => $item->id,
                     'name' => $item->item_name,
                     'unit' => $item->unit_of_measure,
+                    'default_price' => (float) $item->default_unit_price,
                     'supplier_id' => $item->supplier_id,
                     'supplier_name' => $item->supplier->supplier_name ?? 'N/A',
                     'quantity' => $totalQuantity,

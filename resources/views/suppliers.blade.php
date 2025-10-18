@@ -122,6 +122,13 @@
                                 <input type="text" id="add-catalog-name" placeholder="Item Name" class="form-input-suppliers" />
                                 <input type="text" id="add-catalog-unit" placeholder="Unit (e.g., kg, pcs)" class="form-input-suppliers" />
                             </div>
+                            <div class="catalog-input-row">
+                                <input type="number" id="add-catalog-quantity" min="0" step="0.01" placeholder="Initial Quantity" class="form-input-suppliers" />
+                                <input type="number" id="add-catalog-threshold" min="0" step="0.01" placeholder="Min Threshold" class="form-input-suppliers" />
+                            </div>
+                            <div class="catalog-input-row">
+                                <input type="number" id="add-catalog-price" min="0" step="0.01" placeholder="Default Price" class="form-input-suppliers" />
+                            </div>
                             <textarea id="add-catalog-description" placeholder="Description (optional)" class="form-input-suppliers"></textarea>
                             <button type="button" class="catalog-add-btn" id="add-catalog-add-btn">Add Catalog Item</button>
                             <ul id="add-catalog-list" class="catalog-item-list"></ul>
@@ -137,34 +144,53 @@
     <div id="edit-supplier-modal" class="modal-overlay hidden">
         <div class="card modal-content">
             <h3 class="form-title-small">Edit Supplier: <span id="modal-supplier-name"></span></h3>
-            <form id="edit-supplier-form-modal" class="supplier-form-fields">
+            <form id="edit-supplier-form-modal" class="supplier-form-grid">
                 @csrf
                 <input type="hidden" id="edit-supplier-id" name="id">
-                <label>Contact Person</label>
-                <input type="text" name="contact_person" class="form-input-suppliers" id="edit-contact-person"/>
-                <label>Email</label>
-                <input type="email" name="email" class="form-input-suppliers" id="edit-email"/>
-                <label>Phone</label>
-                <input type="tel" name="phone" class="form-input-suppliers" id="edit-phone"/>
-                <label>Address</label>
-                <input type="text" name="address" class="form-input-suppliers" id="edit-address"/>
-                <label>Catalog Items</label>
-                <div class="catalog-input-row">
-                    <input type="text" id="edit-catalog-name" placeholder="Item Name" class="form-input-suppliers" />
-                    <input type="text" id="edit-catalog-unit" placeholder="Unit (e.g., kg, pcs)" class="form-input-suppliers" />
+                <div class="supplier-field">
+                    <label>Contact Person</label>
+                    <input type="text" name="contact_person" class="form-input-suppliers" id="edit-contact-person"/>
                 </div>
-                <textarea id="edit-catalog-description" placeholder="Description (optional)" class="form-input-suppliers"></textarea>
-                <button type="button" class="catalog-add-btn" id="edit-catalog-add-btn">Add Catalog Item</button>
-                <ul id="edit-catalog-list" class="catalog-item-list"></ul>
-                <label class="status-label">Status</label>
-                <div class="status-toggle-group" id="modal-status-toggle">
-                    <button type="button" class="status-toggle-btn" data-status="1">Active</button> 
-                    <button type="button" class="status-toggle-btn" data-status="0">Inactive</button>
+                <div class="supplier-field">
+                    <label>Email</label>
+                    <input type="email" name="email" class="form-input-suppliers" id="edit-email"/>
                 </div>
-                <input type="hidden" id="edit-is-active" name="is_active">
+                <div class="supplier-field">
+                    <label>Phone</label>
+                    <input type="tel" name="phone" class="form-input-suppliers" id="edit-phone"/>
+                </div>
+                <div class="supplier-field">
+                    <label>Address</label>
+                    <input type="text" name="address" class="form-input-suppliers" id="edit-address"/>
+                </div>
+                <div class="supplier-field supplier-field--full">
+                    <label>Catalog Items</label>
+                    <div class="catalog-input-row">
+                        <input type="text" id="edit-catalog-name" placeholder="Item Name" class="form-input-suppliers" />
+                        <input type="text" id="edit-catalog-unit" placeholder="Unit (e.g., kg, pcs)" class="form-input-suppliers" />
+                    </div>
+                    <div class="catalog-input-row">
+                        <input type="number" id="edit-catalog-quantity" min="0" step="0.01" placeholder="Initial Quantity" class="form-input-suppliers" />
+                        <input type="number" id="edit-catalog-threshold" min="0" step="0.01" placeholder="Min Threshold" class="form-input-suppliers" />
+                    </div>
+                    <div class="catalog-input-row">
+                        <input type="number" id="edit-catalog-price" min="0" step="0.01" placeholder="Default Price" class="form-input-suppliers" />
+                    </div>
+                    <textarea id="edit-catalog-description" placeholder="Description (optional)" class="form-input-suppliers"></textarea>
+                    <button type="button" class="catalog-add-btn" id="edit-catalog-add-btn">Add Catalog Item</button>
+                    <ul id="edit-catalog-list" class="catalog-item-list"></ul>
+                </div>
+                <div class="supplier-field supplier-field--full">
+                    <label class="status-label">Status</label>
+                    <div class="status-toggle-group" id="modal-status-toggle">
+                        <button type="button" class="status-toggle-btn" data-status="1">Active</button> 
+                        <button type="button" class="status-toggle-btn" data-status="0">Inactive</button>
+                    </div>
+                    <input type="hidden" id="edit-is-active" name="is_active">
+                </div>
                 <div class="modal-actions">
-                     <button type="button" id="cancel-edit-btn" class="btn-secondary">Cancel</button>
-                     <button type="submit" class="save-edit-btn">Save Changes</button>
+                    <button type="button" id="cancel-edit-btn" class="btn-secondary modal-cancel-btn">Cancel</button>
+                    <button type="submit" class="save-edit-btn">Save Changes</button>
                 </div>
             </form>
         </div>
@@ -175,4 +201,3 @@
     <script src="{{ asset('.html/script_Front.js') }}" defer></script>
 </body>
 </html>
-

@@ -79,10 +79,7 @@
                 <div class="page-title-block active">
                     <h2>System Settings</h2>
                 </div>
-                <div class="settings-search">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="settings-search-input" placeholder="Search settings..." />
-                </div>
+                
             </header>
 
             @if(session('success'))

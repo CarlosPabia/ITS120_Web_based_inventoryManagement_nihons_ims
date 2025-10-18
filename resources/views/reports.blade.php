@@ -57,10 +57,7 @@
 
             <section id="reports-view" class="view">
                 <div class="report-header-controls">
-                    <div class="search-bar">
-                        <i class="fas fa-search"></i>
-                        <input type="text" placeholder="Search reports..." />
-                    </div>
+                    
                 </div>
 
                 <!-- Report hub: first two removed; Order Report renamed to Sales Report -->

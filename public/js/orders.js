@@ -41,7 +41,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
   const canManage = (document.body.dataset.role || '').toLowerCase() === 'manager';
-  const DEFAULT_PRICE = 1.5;
 
   const STATUS_COLORS = {
     Pending: 'status-pending',
@@ -184,6 +183,52 @@ document.addEventListener('DOMContentLoaded', () => {
     return dates.length ? dates[0].toISOString().slice(0, 10) : null;
   }
 
+  function priceFromOption(option) {
+    if (!option || !option.dataset) return null;
+    const raw = option.dataset.price;
+    if (raw === undefined || raw === null || raw === '') return null;
+    const numeric = Number(raw);
+    return Number.isNaN(numeric) ? null : numeric;
+  }
+
+  function syncPriceInputWithSelection(select, { force = false } = {}) {
+    if (!select) return;
+
+    const row = select.closest('tr');
+    if (!row) return;
+
+    const priceInput = row.querySelector('[name="unit_price[]"]');
+    if (!priceInput) return;
+
+    const selectedOption = select.options[select.selectedIndex];
+    const hasSelection = selectedOption && selectedOption.value;
+
+    if (!hasSelection) {
+      if (force || priceInput.dataset.manual !== 'true') {
+        priceInput.value = '';
+        priceInput.dataset.manual = 'false';
+      }
+      return;
+    }
+
+    if (!force && priceInput.dataset.manual === 'true') {
+      return;
+    }
+
+    const numericPrice = priceFromOption(selectedOption);
+
+    if (numericPrice === null) {
+      if (force) {
+        priceInput.value = '';
+        priceInput.dataset.manual = 'false';
+      }
+      return;
+    }
+
+    priceInput.value = numericPrice.toFixed(2);
+    priceInput.dataset.manual = 'false';
+  }
+
   function availableItemsForCurrentSelection() {
     const supplierId = supplierDropdown?.value;
     if (!supplierId) return [];
@@ -198,6 +243,18 @@ document.addEventListener('DOMContentLoaded', () => {
           id: item.id,
           name: inventoryMeta ? inventoryMeta.name : item.name,
           unit: inventoryMeta ? inventoryMeta.unit : item.unit,
+          price: (() => {
+            if (inventoryMeta && typeof inventoryMeta.default_price === 'number') {
+              return inventoryMeta.default_price;
+            }
+            if (typeof item.default_price === 'number') {
+              return item.default_price;
+            }
+            if (typeof item.price === 'number') {
+              return item.price;
+            }
+            return null;
+          })(),
         };
       });
     }
@@ -208,6 +265,7 @@ document.addEventListener('DOMContentLoaded', () => {
         id: item.id,
         name: item.name,
         unit: item.unit,
+        price: typeof item.default_price === 'number' ? item.default_price : null,
       }));
   }
 
@@ -218,7 +276,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const options = items
-      .map(item => `<option value="${item.id}" data-unit="${(item.unit || '-').toString()}">${item.name}</option>`)
+      .map(item => {
+        const unitAttr = (item.unit || '-').toString();
+        const priceAttr = typeof item.price === 'number' && !Number.isNaN(item.price)
+          ? item.price.toFixed(2)
+          : '';
+        return `<option value="${item.id}" data-unit="${unitAttr}" data-price="${priceAttr}">${item.name}</option>`;
+      })
       .join('');
     return `<option value="">Select Item</option>${options}`;
   }
@@ -239,6 +303,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const unitSpan = select.closest('tr')?.querySelector('.unit-display');
       const selectedOption = select.options[select.selectedIndex];
       if (unitSpan) unitSpan.textContent = selectedOption && selectedOption.dataset ? (selectedOption.dataset.unit || '-') : '-';
+      syncPriceInputWithSelection(select);
     });
 
     if (addItemRowBtn) addItemRowBtn.disabled = items.length === 0;
@@ -543,7 +608,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <span class="unit-display" style="display:inline-block;min-width:40px;">-</span>
       </td>
       <td style="padding:5px;">
-        <input type="number" name="unit_price[]" min="0" step="any" value="${DEFAULT_PRICE}" required style="width:90px;padding:5px;">
+        <input type="number" name="unit_price[]" min="0" step="0.01" value="" required style="width:90px;padding:5px;" data-manual="false">
       </td>
       <td class="expiry-input" style="padding:5px;">
         <input type="date" name="expiry_date[]" style="width:150px;padding:5px;">
@@ -894,12 +959,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const unitSpan = select.closest('tr')?.querySelector('.unit-display');
     const option = select.options[select.selectedIndex];
     if (unitSpan) unitSpan.textContent = option && option.value ? (option.dataset.unit || '-') : '-';
+    syncPriceInputWithSelection(select, { force: true });
 
     if (orderTypeSelect?.value === 'Supplier') {
       const expiryInput = select.closest('tr')?.querySelector('[name="expiry_date[]"]');
       if (expiryInput) {
         expiryInput.value = option && option.value ? (nearestBatchExpiryFromInventory(option.value) || todayISO()) : todayISO();
       }
+    }
+  });
+
+  on(itemRowsBody, 'input', event => {
+    if (event.target && event.target.getAttribute('name') === 'unit_price[]') {
+      event.target.dataset.manual = 'true';
     }
   });
 
