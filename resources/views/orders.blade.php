@@ -277,7 +277,7 @@
         </div>
     </div>
 
-    <script src="{{ asset('js/orders.js') }}?v=5" defer></script>
+    <script src="{{ asset('js/orders.js') }}?v=6" defer></script>
 </body>
 </html>
 
