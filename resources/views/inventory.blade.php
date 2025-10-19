@@ -14,13 +14,13 @@
 
     <nav class="navbar">
         <div class="navbar-left">
-            <img src="{{ asset('logo.png') }}" alt="Nihon Cafe Logo" class="logo">
+            <img src="{{ asset('image/logo.png') }}" alt="Nihon Cafe Logo" class="logo">
             <span class="logo-text">NIHON CAFE</span>
         </div>
         <div class="navbar-right">
             <div class="user-dropdown">
                 <div class="user-profile-trigger">
-                    <img src="{{ asset('user.png') }}" alt="User Avatar" class="profile-avatar">
+                    <img src="{{ asset('image/logo.png') }}" alt="User Avatar" class="profile-avatar">
                     <span class="profile-name">@auth {{ Auth::user()->first_name }} {{ Auth::user()->last_name }} @endauth</span>
                     <i class="fas fa-chevron-down dropdown-icon"></i>
                 </div>
@@ -103,7 +103,7 @@
         <div class="modal-content">
             <h2 style="margin-top:0;">Edit Item Details</h2>
             <p id="edit-details-item-name" style="color:#555; margin-top:0;"></p>
-            <div style="display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:10px;">
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:10px;">
                 <label style="display:flex; flex-direction:column; gap:6px;">
                     <span style="font-size:12px; font-weight:600; color:#666;">Unit of Measure</span>
                     <input type="text" id="edit-unit-input" class="form-control" placeholder="e.g., kg, L, pcs" />
@@ -111,6 +111,10 @@
                 <label style="display:flex; flex-direction:column; gap:6px;">
                     <span style="font-size:12px; font-weight:600; color:#666;">Minimum Stock Threshold</span>
                     <input type="number" id="edit-threshold-input" class="form-control" min="0" step="1" />
+                </label>
+                <label style="display:flex; flex-direction:column; gap:6px;">
+                    <span style="font-size:12px; font-weight:600; color:#666;">Quantity in Stock</span>
+                    <input type="number" id="edit-quantity-input" class="form-control" min="0" step="0.01" />
                 </label>
             </div>
             <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:16px;">

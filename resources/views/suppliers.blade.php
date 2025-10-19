@@ -21,6 +21,7 @@
             <div class="user-dropdown">
                 <div class="user-profile-trigger">
                     {{-- Dynamically display the logged-in user's name --}}
+                    <img src="{{ asset('image/logo.png') }}" alt="User Avatar" class="profile-avatar">
                     <span class="profile-name">
                         @auth {{ Auth::user()->first_name }} {{ Auth::user()->last_name }} @endauth
                     </span>

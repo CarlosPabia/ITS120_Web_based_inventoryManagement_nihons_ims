@@ -12,13 +12,13 @@
 
     <nav class="navbar">
         <div class="navbar-left">
-            <img src="{{ asset('logo.png') }}" alt="Nihon Cafe Logo" class="logo">
+            <img src="{{ asset('image/logo.png') }}" alt="Nihon Cafe Logo" class="logo">
             <span class="logo-text">NIHON CAFE</span>
         </div>
         <div class="navbar-right">
             <div class="user-dropdown">
                 <div class="user-profile-trigger">
-                    <img src="{{ asset('user.png') }}" alt="User Avatar" class="profile-avatar">
+                    <img src="{{ asset('image/logo.png') }}" alt="User Avatar" class="profile-avatar">
                     <span class="profile-name">@auth {{ Auth::user()->first_name }} {{ Auth::user()->last_name }} @endauth</span>
                     <i class="fas fa-chevron-down dropdown-icon"></i>
                 </div>

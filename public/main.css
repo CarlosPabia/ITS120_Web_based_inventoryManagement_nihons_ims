@@ -70,6 +70,7 @@ html, body {
     padding: 0 20px;
     z-index: 1000;
     box-sizing: border-box;
+    border-bottom: 4px solid #efe9df;
 }
 
 .navbar-left {
@@ -79,8 +80,11 @@ html, body {
 }
 
 .navbar-left .logo {
-    height: 35px;
-    filter: invert(1);
+    height: 36px;
+    padding: 4px;
+    border-radius: 8px;
+    background-color: var(--color-white);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
 }
 
 .navbar-left .logo-text {
@@ -278,4 +282,133 @@ html, body {
 .security-btn:hover, .add-account-btn:hover, .back-btn:hover, .add-btn:hover {
     background-color: var(--color-primary-light);
     color: var(--color-white);
+}
+
+/* ======================================================= */
+/* 5. RESPONSIVE LAYOUT                                    */
+/* ======================================================= */
+@media (max-width: 1200px) {
+    .navbar {
+        padding: 0 14px;
+    }
+
+    .navbar-left .logo-text {
+        font-size: 18px;
+    }
+
+    .sidebar {
+        width: 220px;
+    }
+
+    .content-area {
+        margin-left: 220px;
+    }
+}
+
+@media (max-width: 960px) {
+    html, body {
+        background-color: var(--color-background);
+    }
+
+    .app-container {
+        flex-direction: column;
+        height: auto;
+        min-height: calc(100vh - var(--navbar-height));
+    }
+
+    .sidebar {
+        position: static;
+        width: 100%;
+        box-shadow: none;
+        display: flex;
+        justify-content: center;
+        padding: 10px 12px;
+        overflow-x: auto;
+    }
+
+    .sidebar-header-placeholder {
+        display: none;
+    }
+
+    .nav-links {
+        display: flex;
+        gap: 8px;
+    }
+
+    .nav-item {
+        margin: 0;
+    }
+
+    .nav-link {
+        padding: 10px 14px;
+        border-radius: 10px;
+        white-space: nowrap;
+        font-size: 13px;
+    }
+
+    .sidebar-title-item .nav-link {
+        font-family: inherit;
+        font-size: 15px;
+        padding: 10px 16px;
+    }
+
+    .content-area {
+        margin-left: 0;
+        width: 100%;
+        padding: 18px 16px 32px;
+    }
+
+    .view {
+        padding: 16px 0;
+    }
+}
+
+@media (max-width: 600px) {
+    :root {
+        --navbar-height: 56px;
+        --content-padding: 14px;
+    }
+
+    .navbar {
+        height: var(--navbar-height);
+        padding: 0 12px;
+    }
+
+    .navbar-left .logo {
+        height: 30px;
+    }
+
+    .navbar-left .logo-text {
+        font-size: 16px;
+    }
+
+    .user-profile-trigger .profile-name {
+        display: none;
+    }
+
+    .user-profile-trigger .dropdown-icon {
+        font-size: 12px;
+    }
+
+    .sidebar {
+        padding: 8px;
+    }
+
+    .nav-link {
+        font-size: 12px;
+        padding: 8px 12px;
+    }
+
+    .content-area {
+        padding: 16px 12px 28px;
+    }
+
+    .card {
+        padding: 16px;
+    }
+
+    .security-btn, .add-account-btn, .back-btn, .add-btn {
+        width: 100%;
+        text-align: center;
+    }
 }

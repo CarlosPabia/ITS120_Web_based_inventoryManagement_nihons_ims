@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\InventoryItem;
 use App\Models\ActivityLog;
+use App\Models\StockLevel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -154,7 +155,10 @@ class InventoryController extends Controller
         $validated = $request->validate([
             'unit_of_measure' => 'nullable|string|max:50',
             'minimum_stock_threshold' => 'nullable|numeric|min:0',
+            'quantity' => 'nullable|numeric|min:0',
         ]);
+
+        $thresholdForNewLevels = null;
 
         if (array_key_exists('unit_of_measure', $validated)) {
             $inventoryItem->unit_of_measure = $validated['unit_of_measure'];
@@ -164,6 +168,15 @@ class InventoryController extends Controller
         if (array_key_exists('minimum_stock_threshold', $validated)) {
             $threshold = (int) $validated['minimum_stock_threshold'];
             $inventoryItem->stockLevels()->update(['minimum_stock_threshold' => $threshold]);
+            $thresholdForNewLevels = $threshold;
+        }
+
+        if (array_key_exists('quantity', $validated)) {
+            $this->synchroniseQuantity(
+                $inventoryItem,
+                (float) $validated['quantity'],
+                $thresholdForNewLevels
+            );
         }
 
         return response()->json([
@@ -173,5 +186,62 @@ class InventoryController extends Controller
                 'unit' => $inventoryItem->unit_of_measure,
             ],
         ]);
+    }
+
+    private function synchroniseQuantity(InventoryItem $inventoryItem, float $targetQuantity, ?float $preferredThreshold = null): void
+    {
+        $targetQuantity = max(0, $targetQuantity);
+        $stockLevels = $inventoryItem->stockLevels()
+            ->orderByRaw('COALESCE(expiry_date, "2999-12-31") asc')
+            ->orderBy('id', 'asc')
+            ->get();
+
+        $currentTotal = $stockLevels->sum('quantity');
+
+        if (abs($currentTotal - $targetQuantity) < 0.0001) {
+            return;
+        }
+
+        if ($preferredThreshold === null) {
+            $preferredThreshold = (float) $stockLevels->max('minimum_stock_threshold') ?: 0;
+        }
+
+        if ($targetQuantity > $currentTotal) {
+            $inventoryItem->stockLevels()->create([
+                'quantity' => $targetQuantity - $currentTotal,
+                'minimum_stock_threshold' => $preferredThreshold,
+                'expiry_date' => null,
+            ]);
+            return;
+        }
+
+        $reduction = $currentTotal - $targetQuantity;
+
+        $stockLevels
+            ->sortByDesc(function ($level) {
+                return [
+                    $level->expiry_date ? strtotime($level->expiry_date) : PHP_INT_MAX,
+                    $level->id,
+                ];
+            })
+            ->each(function (StockLevel $level) use (&$reduction) {
+                if ($reduction <= 0) {
+                    return false;
+                }
+
+                $take = min($level->quantity, $reduction);
+                $newQuantity = round($level->quantity - $take, 4);
+
+                if ($newQuantity <= 0) {
+                    $level->delete();
+                } else {
+                    $level->quantity = $newQuantity;
+                    $level->save();
+                }
+
+                $reduction -= $take;
+
+                return $reduction > 0;
+            });
     }
 }

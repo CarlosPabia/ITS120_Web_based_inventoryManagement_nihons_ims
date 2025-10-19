@@ -3,41 +3,67 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Login - Nihon Café</title>
+    <title>Login - Nihon CafAc</title>
 
-    <!-- External CSS files in public/css/ -->
     <link rel="stylesheet" href="{{ asset('main.css') }}">
     <link rel="stylesheet" href="{{ asset('login.css') }}">
 </head>
-<body>
-    <div class="login-wrapper">
-        <div class="login-box">
-            <h1 class="title">Nihon Café</h1>
-            <p class="subtitle">Inventory Management System</p>
-
-            <form method="POST" action="{{ url('/login') }}">
-                @csrf
-
-                <input type="email" name="email" placeholder="Email" class="input" required value="{{ old('email') }}">
-
-                <input type="password" name="password" placeholder="Password" class="input" required>
-
-                @error('email')
-                    <div class="input-error">{{ $message }}</div>
-                @enderror
-
-                <button type="submit" class="login-btn">Login</button>
-            </form>
-
-            <a href="#" class="forgot-password">Forgot password?</a>
-
-            <div class="security-message">
-                <span>🔒 All Records are AES-256 Encrypted.</span>
-            </div>
-        </div>
+<body class="login-page">
+    <div class="login-background" aria-hidden="true">
+        <div class="login-overlay"></div>
     </div>
 
-    <!-- External JS file -->
+    <main class="login-container" role="main">
+        <section class="login-card" aria-labelledby="app-title">
+            <header class="login-header">
+                <img src="{{ asset('image/logo.png') }}" alt="Nihon Cafe Logo" class="login-logo">
+                <h1 id="app-title" class="login-title">Nihon CafAc</h1>
+                <p class="login-subtitle">Inventory Management System</p>
+            </header>
+
+            <form method="POST" action="{{ url('/login') }}" class="login-form" novalidate>
+                @csrf
+
+                <label class="login-field">
+                    <span class="login-label">Email</span>
+                    <input
+                        type="email"
+                        name="email"
+                        class="login-input"
+                        placeholder="you@nihoncafe.ph"
+                        required
+                        autofocus
+                        value="{{ old('email') }}"
+                    >
+                </label>
+
+                <label class="login-field">
+                    <span class="login-label">Password</span>
+                    <input
+                        type="password"
+                        name="password"
+                        class="login-input"
+                        placeholder="••••••••"
+                        required
+                    >
+                </label>
+
+                @error('email')
+                    <p class="login-error" role="alert">{{ $message }}</p>
+                @enderror
+
+                <button type="submit" class="login-submit">Sign in</button>
+            </form>
+
+            <footer class="login-footer">
+                <p class="security-note">
+                    <span class="security-icon" aria-hidden="true">🔐</span>
+                    AES-256 encrypted records for every transaction.
+                </p>
+            </footer>
+        </section>
+    </main>
+
     <script src="{{ asset('js/script.js') }}" defer></script>
 </body>
 </html>

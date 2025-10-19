@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const detailsItemName = document.getElementById('edit-details-item-name');
     const detailsUnitInput = document.getElementById('edit-unit-input');
     const detailsThresholdInput = document.getElementById('edit-threshold-input');
+    const detailsQuantityInput = document.getElementById('edit-quantity-input');
     const detailsCancelBtn = document.getElementById('edit-details-cancel');
     const detailsSaveBtn = document.getElementById('edit-details-save');
     let editingDetailsItemId = null;
@@ -90,6 +91,10 @@ document.addEventListener('DOMContentLoaded', () => {
         detailsItemName.textContent = `${item.name} (ID ${item.id})`;
         detailsUnitInput.value = item.unit || '';
         detailsThresholdInput.value = currentThreshold(item);
+        if (detailsQuantityInput) {
+            const qty = Number(item.quantity);
+            detailsQuantityInput.value = Number.isFinite(qty) ? qty : 0;
+        }
         detailsModal.classList.remove('hidden');
     }
 
@@ -311,6 +316,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!editingDetailsItemId) return;
         const unit = (detailsUnitInput.value || '').trim();
         const threshold = Number(detailsThresholdInput.value || 0);
+        const quantity = detailsQuantityInput ? Number(detailsQuantityInput.value || 0) : null;
+
+        if (detailsQuantityInput && (Number.isNaN(quantity) || quantity < 0)) {
+            alert('Enter a valid quantity (0 or higher).');
+            return;
+        }
+
+        if (Number.isNaN(threshold) || threshold < 0) {
+            alert('Enter a valid minimum stock threshold (0 or higher).');
+            return;
+        }
         try {
             const response = await fetch(`${API_URL}/${editingDetailsItemId}`, {
                 method: 'PATCH',
@@ -319,7 +335,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     'X-CSRF-TOKEN': csrfToken,
                     'Accept': 'application/json',
                 },
-                body: JSON.stringify({ unit_of_measure: unit, minimum_stock_threshold: threshold })
+                body: JSON.stringify({
+                    unit_of_measure: unit,
+                    minimum_stock_threshold: threshold,
+                    quantity: quantity,
+                })
             });
             const result = await response.json();
             if (!response.ok) throw new Error(result.error || 'Failed to update item details.');
