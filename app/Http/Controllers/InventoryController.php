@@ -76,6 +76,12 @@ class InventoryController extends Controller
      */
     public function destroy(InventoryItem $inventoryItem)
     {
+        if (!$this->userCanManageInventory()) {
+            return response()->json([
+                'error' => 'Only managers may modify inventory.'
+            ], 403);
+        }
+
         try {
             $hasStock = $inventoryItem->stockLevels()->where('quantity', '>', 0)->exists();
 
@@ -121,6 +127,12 @@ class InventoryController extends Controller
      */
     public function updateExpiry(Request $request, InventoryItem $inventoryItem)
     {
+        if (!$this->userCanManageInventory()) {
+            return response()->json([
+                'error' => 'Only managers may modify inventory.'
+            ], 403);
+        }
+
         $validated = $request->validate([
             'expiry_date' => 'required|date',
         ]);
@@ -152,6 +164,12 @@ class InventoryController extends Controller
      */
     public function updateDetails(Request $request, InventoryItem $inventoryItem)
     {
+        if (!$this->userCanManageInventory()) {
+            return response()->json([
+                'error' => 'Only managers may modify inventory.'
+            ], 403);
+        }
+
         $validated = $request->validate([
             'unit_of_measure' => 'nullable|string|max:50',
             'minimum_stock_threshold' => 'nullable|numeric|min:0',
@@ -186,6 +204,17 @@ class InventoryController extends Controller
                 'unit' => $inventoryItem->unit_of_measure,
             ],
         ]);
+    }
+
+    private function userCanManageInventory(): bool
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return false;
+        }
+
+        $roleName = optional($user->role)->role_name;
+        return $roleName && strtolower($roleName) === 'manager';
     }
 
     private function synchroniseQuantity(InventoryItem $inventoryItem, float $targetQuantity, ?float $preferredThreshold = null): void

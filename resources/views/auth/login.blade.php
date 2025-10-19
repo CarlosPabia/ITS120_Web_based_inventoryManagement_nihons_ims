@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Login - Nihon CafAc</title>
+    <title>Login - Nihon Cafe</title>
 
     <link rel="stylesheet" href="{{ asset('main.css') }}">
     <link rel="stylesheet" href="{{ asset('login.css') }}">
@@ -17,7 +17,7 @@
         <section class="login-card" aria-labelledby="app-title">
             <header class="login-header">
                 <img src="{{ asset('image/logo.png') }}" alt="Nihon Cafe Logo" class="login-logo">
-                <h1 id="app-title" class="login-title">Nihon CafAc</h1>
+                <h1 id="app-title" class="login-title">Nihon Cafe</h1>
                 <p class="login-subtitle">Inventory Management System</p>
             </header>
 

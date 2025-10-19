@@ -238,12 +238,12 @@
             <section id="panel-notifications" class="setting-panel hidden">
                 <div class="card setting-detail-card">
                     <h3 class="setting-title">Stock Alert Configuration</h3>
-                    <p>Automated dashboard alerts will highlight items with low or critical stock levels. Configuration options are coming soon.</p>
+                    <p>Automated dashboard alerts will highlight items with low or critical stock levels.</p>
                     <div class="card" style="margin-top: 15px; padding: 20px; background-color: #fff8e1; border-left: 4px solid #f39c12;">
-                        <strong>Next Steps</strong>
+                        <strong>Configurations</strong>
                         <ul style="margin-top: 10px; padding-left: 20px;">
                             <li>Define threshold rules per inventory category.</li>
-                            <li>Support email & in-app notifications for low stock.</li>
+                            <li>in-app notifications for low and critical stocks.</li>
                             <li>Integrate with dashboard widgets for quick review.</li>
                         </ul>
                     </div>

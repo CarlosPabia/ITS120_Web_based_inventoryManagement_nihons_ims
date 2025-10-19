@@ -165,7 +165,7 @@
                 <div class="card inventory-overview-card">
                     <div class="card-header">
                         <h3>Inventory Overview</h3>
-                        <a href="{{ route('reports.index') }}#inventory" class="view-reports-link">View Reports</a>
+                        <a href="{{ route('inventory.index') }}#inventory" class="view-reports-link">View Inventory</a>
                     </div>
                     <div class="inventory-content-grid">
                         <div class="available-stocks">

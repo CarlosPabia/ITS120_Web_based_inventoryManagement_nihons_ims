@@ -5,6 +5,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const summaryLabel = document.getElementById('inventory-summary');
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
+    const roleElement = document.querySelector('.content-area');
+    const roleName = roleElement && roleElement.dataset && roleElement.dataset.role
+        ? roleElement.dataset.role.trim().toLowerCase()
+        : '';
+    const canManageInventory = roleName === 'manager';
+
     // Edit modal elements
     const editModal = document.getElementById('edit-expiry-modal');
     const editItemName = document.getElementById('edit-expiry-item-name');
@@ -155,15 +161,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
             row.children[6].appendChild(statusTag);
             const actionsCell = row.children[7];
-            actionsCell.innerHTML = `
-                <div class="action-dropdown">
-                    <button class="action-dropdown-btn edit-button">Edit <i class="fas fa-chevron-down dropdown-icon-small"></i></button>
-                    <div class="action-dropdown-content hidden">
-                        <a href="#" class="dropdown-action-item edit-details" data-id="${item.id}"><i class="fas fa-sliders-h"></i> Edit Details</a>
-                        <a href="#" class="dropdown-action-item edit-item" data-id="${item.id}"><i class="fas fa-edit"></i> Edit Expiry</a>
-                        <a href="#" class="dropdown-action-item delete ${deleteDisabled ? 'is-disabled' : ''}" data-id="${item.id}" ${deleteDisabled ? 'aria-disabled="true"' : ''}><i class="fas fa-trash"></i> Delete</a>
-                    </div>
-                </div>`;
+            if (canManageInventory) {
+                actionsCell.innerHTML = `
+                    <div class="action-dropdown">
+                        <button class="action-dropdown-btn edit-button">Edit <i class="fas fa-chevron-down dropdown-icon-small"></i></button>
+                        <div class="action-dropdown-content hidden">
+                            <a href="#" class="dropdown-action-item edit-details" data-id="${item.id}"><i class="fas fa-sliders-h"></i> Edit Details</a>
+                            <a href="#" class="dropdown-action-item edit-item" data-id="${item.id}"><i class="fas fa-edit"></i> Edit Expiry</a>
+                            <a href="#" class="dropdown-action-item delete ${deleteDisabled ? 'is-disabled' : ''}" data-id="${item.id}" ${deleteDisabled ? 'aria-disabled="true"' : ''}><i class="fas fa-trash"></i> Delete</a>
+                        </div>
+                    </div>`;
+            } else {
+                actionsCell.textContent = 'View only';
+                actionsCell.classList.add('inventory-view-only');
+            }
 
             tableBody.appendChild(row);
         });
@@ -212,6 +223,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     tableBody.addEventListener('click', event => {
+        if (!canManageInventory) {
+            return;
+        }
         // Toggle dropdown
         const toggleBtn = event.target.closest('.action-dropdown-btn');
         if (toggleBtn) {

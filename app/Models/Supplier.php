@@ -29,6 +29,10 @@ class Supplier extends Model
     protected $casts = [
         'is_active' => 'boolean',
         'is_system' => 'boolean',
+        'contact_person' => 'encrypted',
+        'email' => 'encrypted',
+        'phone' => 'encrypted',
+        'address' => 'encrypted',
     ];
 
     // Scopes for differentiating internal vs regular suppliers

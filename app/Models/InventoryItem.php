@@ -25,6 +25,7 @@ class InventoryItem extends Model
 
     protected $casts = [
         'default_unit_price' => 'decimal:2',
+        'item_description' => 'encrypted',
     ];
 
     public function supplier(): BelongsTo

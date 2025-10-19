@@ -20,6 +20,7 @@ class ActivityLog extends Model
 
     protected $casts = [
         'timestamp' => 'datetime',
+        'details' => 'encrypted',
     ];
 
     public function user(): BelongsTo

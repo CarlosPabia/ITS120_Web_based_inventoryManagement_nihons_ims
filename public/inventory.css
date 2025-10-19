@@ -27,6 +27,11 @@
 .dropdown-action-item.delete { color:#c0392b; }
 .dropdown-action-item.delete.is-disabled { opacity:0.45; pointer-events:none; }
 
+.inventory-view-only {
+  color: #7a7f86;
+  font-style: italic;
+}
+
 /* Minimal modal styles for Inventory edit */
 .modal-overlay {
   position: fixed;
