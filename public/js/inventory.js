@@ -32,9 +32,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let allItems = [];
 
     function formatDateMMDDYYYY(iso) {
-        if (!iso) return '—';
+        if (!iso) return 'â€”';
         const d = new Date(iso);
-        if (Number.isNaN(d.getTime())) return '—';
+        if (Number.isNaN(d.getTime())) return 'â€”';
         const mm = String(d.getMonth() + 1).padStart(2, '0');
         const dd = String(d.getDate()).padStart(2, '0');
         const yyyy = d.getFullYear();
@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (Number.isNaN(d.getTime())) continue;
             if (!min || d < min) min = d;
         }
-        return min ? formatDateMMDDYYYY(min.toISOString()) : '—';
+        return min ? formatDateMMDDYYYY(min.toISOString()) : 'â€”';
     }
 
     function defaultOneMonthAheadISO() {
@@ -198,11 +198,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(result.error || 'Failed to delete item.');
             }
 
-            alert(result.message || 'Item removed.');
+            notify.success(result.message || 'Item removed.');
             await loadInventory();
         } catch (error) {
             console.error('Delete inventory item error:', error);
-            alert(`Error: ${error.message}`);
+            const message = error instanceof Error ? error.message : 'Failed to delete item.';
+            notify.error(message || 'Failed to delete item.');
         }
     }
 
@@ -320,8 +321,7 @@ document.addEventListener('DOMContentLoaded', () => {
             await loadInventory();
             closeEditModal();
         } catch (err) {
-            console.error('Update expiry error:', err);
-            alert(err.message || 'Failed to update expiry date.');
+                        notify.error(err.message || 'Failed to update expiry date.');
         }
     });
 
@@ -333,12 +333,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const quantity = detailsQuantityInput ? Number(detailsQuantityInput.value || 0) : null;
 
         if (detailsQuantityInput && (Number.isNaN(quantity) || quantity < 0)) {
-            alert('Enter a valid quantity (0 or higher).');
+            notify.warn('Enter a valid quantity (0 or higher).');
             return;
         }
 
         if (Number.isNaN(threshold) || threshold < 0) {
-            alert('Enter a valid minimum stock threshold (0 or higher).');
+            notify.warn('Enter a valid quantity (0 or higher).');
             return;
         }
         try {
@@ -360,10 +360,15 @@ document.addEventListener('DOMContentLoaded', () => {
             await loadInventory();
             closeEditDetailsModal();
         } catch (err) {
-            console.error('Update details error:', err);
-            alert(err.message || 'Failed to update item details.');
+                        notify.error(err.message || 'Failed to update item details.');
         }
     });
 
     loadInventory();
 });
+
+
+
+
+
+

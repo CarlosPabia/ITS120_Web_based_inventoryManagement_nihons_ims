@@ -151,7 +151,7 @@
                     @if($pendingOrdersList->isNotEmpty())
                         <ul class="mini-summary-list">
                             @foreach($pendingOrdersList->take(4) as $order)
-                                <li>{{ $order['display_id'] }} Â· {{ $order['supplier'] }} Â· {{ $order['order_date'] }}</li>
+                                <li>{{ $order['display_id'] }} Ã‚Â· {{ $order['supplier'] }} Ã‚Â· {{ $order['order_date'] }}</li>
                             @endforeach
                         </ul>
                     @else
@@ -233,6 +233,7 @@
     </script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
     <script src="{{ asset('js/dashboard.js') }}" defer></script>
+    <script src="{{ asset('js/notify.js') }}" defer></script>
 </body>
 </html>
 

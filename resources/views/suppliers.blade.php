@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Suppliers - Nihon Café</title>
+    <title>Suppliers - Nihon CafÃ©</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     
     {{-- Use Laravel's asset() helper to generate correct paths to your CSS --}}
@@ -200,5 +200,6 @@
     {{-- Link to the new, dedicated JavaScript file for this page --}}
     <script src="{{ asset('js/suppliers.js') }}?v=3" defer></script>
     <script src="{{ asset('.html/script_Front.js') }}" defer></script>
+    <script src="{{ asset('js/notify.js') }}" defer></script>
 </body>
 </html>

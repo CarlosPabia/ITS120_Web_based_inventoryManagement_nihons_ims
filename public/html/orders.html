@@ -289,7 +289,12 @@
             document.querySelectorAll('.confirm-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const formType = this.textContent.includes('Supplier') ? 'Supplier' : 'Customer';
-                    alert(`Simulating confirmation for new ${formType} order.`);
+                    const message = `Simulating confirmation for new ${formType} order.`;
+                    if (window.notify && typeof window.notify.info === 'function') {
+                        window.notify.info(message);
+                    } else {
+                        console.log(message);
+                    }
                 });
             });
 

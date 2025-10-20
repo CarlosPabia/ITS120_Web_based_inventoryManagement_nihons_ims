@@ -189,7 +189,12 @@
                                 }
                             }
                         } else if (action === 'Edit') {
-                            alert(`Simulating opening Edit form for item: ${sku}. Saving changes would also update localStorage.`);
+                            const message = `Simulating opening Edit form for item: ${sku}. Saving changes would also update localStorage.`;
+                            if (window.notify && typeof window.notify.info === 'function') {
+                                window.notify.info(message);
+                            } else {
+                                console.log(message);
+                            }
                         }
 
                         this.closest('.action-dropdown-content').classList.add('hidden');

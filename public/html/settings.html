@@ -297,7 +297,11 @@
                 setTimeout(() => {
                     button.textContent = originalText;
                     button.disabled = false;
-                    alert(successMessage);
+                    if (window.notify && typeof window.notify.success === 'function') {
+                        window.notify.success(successMessage);
+                    } else {
+                        console.log(successMessage);
+                    }
                     if (callback) callback();
                 }, 1500);
             }

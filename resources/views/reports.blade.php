@@ -169,7 +169,7 @@
                                         <td>{{ $supplier['contact'] }}</td>
                                         <td>{{ number_format($supplier['total_orders']) }}</td>
                                         <td>
-                                            {{ $supplier['on_time_rate'] !== null ? $supplier['on_time_rate'] . '%' : '—' }}
+                                            {{ $supplier['on_time_rate'] !== null ? $supplier['on_time_rate'] . '%' : 'â€”' }}
                                         </td>
                                         <td>{{ $supplier['last_delivery'] }}</td>
                                     </tr>
@@ -230,5 +230,6 @@
             });
         });
     </script>
+    <script src="{{ asset('js/notify.js') }}" defer></script>
 </body>
 </html>

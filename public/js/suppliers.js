@@ -395,37 +395,37 @@ document.addEventListener('DOMContentLoaded', () => {
         const priceValue = parseOptionalNumber(addCatalogPriceInput ? addCatalogPriceInput.value : null);
 
         if (!name) {
-            alert('Provide a catalog item name.');
+            notify.warn('Provide a catalog item name.');
             return;
         }
 
         if (Number.isNaN(quantityValue)) {
-            alert('Initial quantity must be a valid number.');
+            notify.warn('Initial quantity must be a valid number.');
             return;
         }
 
         if (quantityValue !== null && quantityValue < 0) {
-            alert('Initial quantity cannot be negative.');
+            notify.warn('Initial quantity cannot be negative.');
             return;
         }
 
         if (Number.isNaN(thresholdValue)) {
-            alert('Minimum threshold must be a valid number.');
+            notify.warn('Minimum threshold must be a valid number.');
             return;
         }
 
         if (thresholdValue !== null && thresholdValue < 0) {
-            alert('Minimum threshold cannot be negative.');
+            notify.warn('Minimum threshold cannot be negative.');
             return;
         }
 
         if (priceValue === null || Number.isNaN(priceValue)) {
-            alert('Provide a valid default price.');
+            notify.warn('Provide a valid default price.');
             return;
         }
 
         if (priceValue < 0) {
-            alert('Default price cannot be negative.');
+            notify.warn('Default price cannot be negative.');
             return;
         }
 
@@ -470,37 +470,37 @@ document.addEventListener('DOMContentLoaded', () => {
         const priceValue = parseOptionalNumber(editCatalogPriceInput ? editCatalogPriceInput.value : null);
 
         if (!name) {
-            alert('Provide a catalog item name.');
+            notify.warn('Provide a catalog item name.');
             return;
         }
 
         if (Number.isNaN(quantityValue)) {
-            alert('Initial quantity must be a valid number.');
+            notify.warn('Initial quantity must be a valid number.');
             return;
         }
 
         if (quantityValue !== null && quantityValue < 0) {
-            alert('Initial quantity cannot be negative.');
+            notify.warn('Initial quantity cannot be negative.');
             return;
         }
 
         if (Number.isNaN(thresholdValue)) {
-            alert('Minimum threshold must be a valid number.');
+            notify.warn('Minimum threshold must be a valid number.');
             return;
         }
 
         if (thresholdValue !== null && thresholdValue < 0) {
-            alert('Minimum threshold cannot be negative.');
+            notify.warn('Minimum threshold cannot be negative.');
             return;
         }
 
         if (priceValue === null || Number.isNaN(priceValue)) {
-            alert('Provide a valid default price.');
+            notify.warn('Provide a valid default price.');
             return;
         }
 
         if (priceValue < 0) {
-            alert('Default price cannot be negative.');
+            notify.warn('Default price cannot be negative.');
             return;
         }
 
@@ -583,7 +583,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const hasInvalidPrices = addCatalogNewItems.some(item => typeof item.price !== 'number' || Number.isNaN(item.price));
         if (hasInvalidPrices) {
-            alert('Provide a valid default price for each catalog item.');
+            notify.warn('Provide a valid default price for each catalog item.');
             return;
         }
 
@@ -603,13 +603,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(result.error || 'Could not add supplier.');
             }
 
-            alert(result.message);
+            notify.success(result.message);
             addForm.reset();
             resetAddCatalogState();
             await fetchSuppliers();
         } catch (error) {
             console.error('Add supplier error:', error);
-            alert(`Error: ${error.message}`);
+            const message = error instanceof Error ? error.message : 'Failed to add supplier.';
+            notify.error(message || 'Failed to add supplier.');
         }
     }
 
@@ -625,7 +626,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const newPricesInvalid = editCatalogNewItems.some(item => typeof item.price !== 'number' || Number.isNaN(item.price));
 
         if (existingPricesInvalid || newPricesInvalid) {
-            alert('Provide a valid default price for each catalog item.');
+            notify.warn('Provide a valid default price for each catalog item.');
             return;
         }
 
@@ -650,12 +651,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(result.error || 'Could not update supplier.');
             }
 
-            alert(result.message);
+            notify.success(result.message);
             closeEditModal();
             await fetchSuppliers();
         } catch (error) {
             console.error('Update supplier error:', error);
-            alert(`Error: ${error.message}`);
+            const message = error instanceof Error ? error.message : 'Failed to update supplier.';
+            notify.error(message || 'Failed to update supplier.');
         }
     }
 
@@ -678,11 +680,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(result.error || 'Failed to delete supplier.');
             }
 
-            alert(result.message);
+            notify.success(result.message);
             await fetchSuppliers();
         } catch (error) {
             console.error('Delete supplier error:', error);
-            alert(`Error: ${error.message}`);
+            const message = error instanceof Error ? error.message : 'Failed to delete supplier.';
+            notify.error(message || 'Failed to delete supplier.');
         }
     }
 
@@ -806,3 +809,8 @@ document.addEventListener('DOMContentLoaded', () => {
     renderEditCatalogList();
     fetchSuppliers();
 });
+
+
+
+
+

@@ -79,7 +79,11 @@ const initializeSupplierModal = () => {
     if (saveButton) {
         saveButton.addEventListener('click', (event) => {
             event.preventDefault();
-            alert("Supplier details saved!");
+            if (window.notify && typeof window.notify.success === 'function') {
+                window.notify.success('Supplier details saved!');
+            } else {
+                console.log('Supplier details saved!');
+            }
             modal.classList.add('hidden');
         });
     }
@@ -209,7 +213,11 @@ const initializeUserModal = () => {
     if (createButton) {
         createButton.addEventListener('click', (event) => {
             event.preventDefault();
-            alert("Account saved!");
+            if (window.notify && typeof window.notify.success === 'function') {
+                window.notify.success('Account saved!');
+            } else {
+                console.log('Account saved!');
+            }
             modal.classList.add('hidden');
         });
     }

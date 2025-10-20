@@ -767,7 +767,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      window.alert(result?.message || 'Order created successfully.');
+      notify.success(result?.message || 'Order created successfully.');
       orderModal?.classList.add('hidden');
       orderForm?.reset();
       if (itemRowsBody) itemRowsBody.innerHTML = '';
@@ -865,7 +865,7 @@ document.addEventListener('DOMContentLoaded', () => {
       detailsModal?.classList.remove('hidden');
     } catch (error) {
       console.error('Details fetch error:', error);
-      window.alert(error.message);
+      notify.success(result?.message || 'Order created successfully.');
     }
   }
 
@@ -935,12 +935,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const result = await response.json();
       if (!response.ok) throw new Error(result?.error || 'Failed to delete order.');
 
-      window.alert(result?.message || 'Order deleted.');
+      notify.success(result?.message || 'Order created successfully.');
       detailsModal?.classList.add('hidden');
       await loadInitialData();
     } catch (error) {
       console.error('Delete order error:', error);
-      window.alert(error.message);
+      notify.success(result?.message || 'Order created successfully.');
     }
   }
 
@@ -1012,3 +1012,6 @@ document.addEventListener('DOMContentLoaded', () => {
   setCreateMode('Supplier');
   loadInitialData();
 });
+
+
+

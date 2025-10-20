@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -278,6 +278,7 @@
     </div>
 
     <script src="{{ asset('js/orders.js') }}?v=6" defer></script>
+    <script src="{{ asset('js/notify.js') }}" defer></script>
 </body>
 </html>
 

@@ -125,5 +125,6 @@
     </div>
 
     <script src="{{ asset('js/inventory.js') }}" defer></script>
+    <script src="{{ asset('js/notify.js') }}" defer></script>
 </body>
 </html>
