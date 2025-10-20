@@ -19,17 +19,26 @@ class DemoDataSeeder extends Seeder
     {
         $now = Carbon::now();
 
+        // Reset in FK-safe order
         DB::statement('SET FOREIGN_KEY_CHECKS=0');
+
         OrderItem::truncate();
         Order::truncate();
         StockLevel::truncate();
         DB::table('supplier_catalog')->truncate();
+
+        // IMPORTANT: wipe suppliers to avoid decrypting old plaintext rows
+        Supplier::truncate();
+
         InventoryItem::truncate();
         ActivityLog::truncate();
+
         DB::statement('SET FOREIGN_KEY_CHECKS=1');
 
+        // Use any existing user id, or fall back to 1
         $userId = User::query()->orderBy('id')->value('id') ?? 1;
 
+        // Seed suppliers
         $supplierDefinitions = [
             [
                 'supplier_name' => 'Nihon Cafe HQ',
@@ -68,19 +77,19 @@ class DemoDataSeeder extends Seeder
 
         $suppliers = [];
         foreach ($supplierDefinitions as $definition) {
-            $supplier = Supplier::updateOrCreate(
-                ['supplier_name' => $definition['supplier_name']],
-                collect($definition)->except('is_system')->toArray()
-            );
+            // Create fresh (no update path needed after truncate)
+            $isSystem = $definition['is_system'] ?? false;
+            unset($definition['is_system']);
 
-            if (array_key_exists('is_system', $definition)) {
-                $supplier->is_system = $definition['is_system'];
+            $supplier = Supplier::create($definition);
+            if ($isSystem) {
+                $supplier->is_system = true;
                 $supplier->save();
             }
-
             $suppliers[$supplier->supplier_name] = $supplier;
         }
 
+        // Finished goods
         $finishedGoods = [
             [
                 'name' => 'Spanish Latte (Iced)',
@@ -184,6 +193,7 @@ class DemoDataSeeder extends Seeder
             ],
         ];
 
+        // Raw materials
         $rawMaterials = [
             [
                 'name' => 'Whole Arabica Beans (10kg Sack)',
@@ -253,6 +263,7 @@ class DemoDataSeeder extends Seeder
             ],
         ];
 
+        // Build a combined list, assigning finished goods to HQ by default
         $catalogItems = array_merge(
             array_map(function (array $item) {
                 $item['supplier'] = 'Nihon Cafe HQ';
@@ -261,6 +272,7 @@ class DemoDataSeeder extends Seeder
             $rawMaterials
         );
 
+        // Create inventory + supplier_catalog + initial stock
         $items = [];
         foreach ($catalogItems as $itemDef) {
             $supplier = $suppliers[$itemDef['supplier']] ?? null;
@@ -296,6 +308,7 @@ class DemoDataSeeder extends Seeder
             }
         }
 
+        // Orders plan
         $orderPlans = [
             [
                 'order_type' => 'Supplier',
@@ -459,6 +472,7 @@ class DemoDataSeeder extends Seeder
             }
         }
 
+        // Activity log entries
         collect([
             [
                 'user_id' => $userId,
