@@ -6,7 +6,6 @@ use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 class UserSeeder extends Seeder
 {
@@ -30,7 +29,6 @@ class UserSeeder extends Seeder
                 'starting_date' => now()->toDateString(),
                 'role_id'       => $managerRole->id,
                 'is_active'     => true,
-                'remember_token'=> Str::random(10),
             ]
         );
 
@@ -44,9 +42,7 @@ class UserSeeder extends Seeder
                 'starting_date' => now()->toDateString(),
                 'role_id'       => $employeeRole->id,
                 'is_active'     => true,
-                'remember_token'=> Str::random(10),
             ]
         );
     }
 }
-
