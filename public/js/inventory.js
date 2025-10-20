@@ -32,9 +32,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let allItems = [];
 
     function formatDateMMDDYYYY(iso) {
-        if (!iso) return 'â€”';
+        if (!iso) return '--';
         const d = new Date(iso);
-        if (Number.isNaN(d.getTime())) return 'â€”';
+        if (Number.isNaN(d.getTime())) return '--';
         const mm = String(d.getMonth() + 1).padStart(2, '0');
         const dd = String(d.getDate()).padStart(2, '0');
         const yyyy = d.getFullYear();
@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (Number.isNaN(d.getTime())) continue;
             if (!min || d < min) min = d;
         }
-        return min ? formatDateMMDDYYYY(min.toISOString()) : 'â€”';
+        return min ? formatDateMMDDYYYY(min.toISOString()) : '--';
     }
 
     function defaultOneMonthAheadISO() {
@@ -223,7 +223,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderTable(filtered);
     }
 
-    tableBody.addEventListener('click', event => {
+    tableBody.addEventListener('click', async event => {
         if (!canManageInventory) {
             return;
         }
@@ -268,7 +268,15 @@ document.addEventListener('DOMContentLoaded', () => {
             event.preventDefault();
             if (delLink.classList.contains('is-disabled')) return;
             const itemId = delLink.dataset.id;
-            const confirmed = window.confirm('Delete this inventory item? This cannot be undone.');
+            const confirmed = window.dialogs?.confirm
+                ? await window.dialogs.confirm({
+                    title: 'Delete Inventory Item',
+                    message: 'Delete this inventory item? This cannot be undone.',
+                    confirmText: 'Delete',
+                    cancelText: 'Cancel',
+                    tone: 'danger',
+                })
+                : window.confirm('Delete this inventory item? This cannot be undone.');
             if (!confirmed) return;
             const content = delLink.closest('.action-dropdown-content');
             if (content) content.classList.add('hidden');
@@ -321,7 +329,7 @@ document.addEventListener('DOMContentLoaded', () => {
             await loadInventory();
             closeEditModal();
         } catch (err) {
-                        notify.error(err.message || 'Failed to update expiry date.');
+            notify.error(err.message || 'Failed to update expiry date.');
         }
     });
 
@@ -329,7 +337,8 @@ document.addEventListener('DOMContentLoaded', () => {
     detailsSaveBtn && detailsSaveBtn.addEventListener('click', async () => {
         if (!editingDetailsItemId) return;
         const unit = (detailsUnitInput.value || '').trim();
-        const threshold = Number(detailsThresholdInput.value || 0);
+        const thresholdInput = (detailsThresholdInput.value || '').trim();
+        const threshold = thresholdInput.length ? Number(thresholdInput) : NaN;
         const quantity = detailsQuantityInput ? Number(detailsQuantityInput.value || 0) : null;
 
         if (detailsQuantityInput && (Number.isNaN(quantity) || quantity < 0)) {
@@ -337,8 +346,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        if (Number.isNaN(threshold) || threshold < 0) {
-            notify.warn('Enter a valid quantity (0 or higher).');
+        if (!thresholdInput.length || Number.isNaN(threshold) || threshold <= 10) {
+            notify.warn('Minimum stock threshold must be greater than 10.');
             return;
         }
         try {
@@ -360,7 +369,7 @@ document.addEventListener('DOMContentLoaded', () => {
             await loadInventory();
             closeEditDetailsModal();
         } catch (err) {
-                        notify.error(err.message || 'Failed to update item details.');
+            notify.error(err.message || 'Failed to update item details.');
         }
     });
 

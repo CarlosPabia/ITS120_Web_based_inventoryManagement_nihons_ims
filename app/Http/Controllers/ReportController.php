@@ -13,6 +13,7 @@ use Carbon\Carbon;
 
 class ReportController extends Controller
 {
+    private const CRITICAL_THRESHOLD = 10;
     /**
      * Show the Reports page with aggregated metrics.
      */
@@ -32,6 +33,8 @@ class ReportController extends Controller
             $filterConfig['top']
         );
 
+        $supplierFilters = $this->buildSupplierPerformanceFilters($request);
+
         return view('reports', array_merge($metrics, [
             'expiryCount' => $expiryCount,
             'internalSales' => $internalSales,
@@ -40,7 +43,16 @@ class ReportController extends Controller
                 'end_date' => $filterConfig['end']->format('Y-m-d'),
                 'top' => $filterConfig['top'],
             ],
-            'supplierPerformance' => $this->getSupplierPerformance(),
+            'supplierPerformance' => $this->getSupplierPerformance(
+                $supplierFilters['start'],
+                $supplierFilters['end'],
+                $supplierFilters['top']
+            ),
+            'supplierFilters' => [
+                'start_date' => $supplierFilters['start']->format('Y-m-d'),
+                'end_date' => $supplierFilters['end']->format('Y-m-d'),
+                'top' => $supplierFilters['top'],
+            ],
         ]));
     }
 
@@ -67,6 +79,8 @@ class ReportController extends Controller
             'availableStockChart' => $inventorySnapshot['available_stock_chart'],
             'lowStockItems' => $inventorySnapshot['low_stock_items'],
             'lowStockCount' => $inventorySnapshot['low_stock_count'],
+            'criticalStockItems' => $inventorySnapshot['critical_stock_items'],
+            'criticalStockCount' => $inventorySnapshot['critical_stock_count'],
             'pendingOrders' => $pendingOrders['orders'],
             'pendingOrdersCount' => $pendingOrders['count'],
             'topSellingItems' => $this->getTopSellingItems(),
@@ -178,6 +192,33 @@ class ReportController extends Controller
         ];
     }
 
+    protected function buildSupplierPerformanceFilters(Request $request): array
+    {
+        $end = $request->filled('supplier_end_date')
+            ? Carbon::parse($request->input('supplier_end_date'))
+            : Carbon::now();
+
+        $start = $request->filled('supplier_start_date')
+            ? Carbon::parse($request->input('supplier_start_date'))
+            : $end->copy()->subDays(30);
+
+        if ($start->greaterThan($end)) {
+            [$start, $end] = [$end->copy(), $start];
+        }
+
+        $top = (int) $request->input('supplier_top', 10);
+        if ($top <= 0) {
+            $top = 10;
+        }
+        $top = min($top, 50);
+
+        return [
+            'start' => $start->startOfDay(),
+            'end' => $end->endOfDay(),
+            'top' => $top,
+        ];
+    }
+
     protected function buildInventorySnapshot(): array
     {
         $items = InventoryItem::with('stockLevels')->orderBy('item_name')->get();
@@ -198,10 +239,15 @@ class ReportController extends Controller
 
         $availableStats = [];
         $lowStock = [];
+        $criticalStock = [];
 
         foreach ($items as $item) {
             $quantity = (float) $item->stockLevels->sum('quantity');
-            $threshold = (float) $item->stockLevels->max('minimum_stock_threshold') ?? 0;
+            $thresholdRaw = $item->stockLevels->max('minimum_stock_threshold');
+            $threshold = $thresholdRaw !== null ? (float) $thresholdRaw : null;
+            $effectiveLowThreshold = $threshold !== null && $threshold > self::CRITICAL_THRESHOLD
+                ? $threshold
+                : null;
 
             $summary['total_quantity'] += $quantity;
             $summary['total_value'] += $quantity * (float) ($priceMap[$item->id] ?? 0);
@@ -213,11 +259,17 @@ class ReportController extends Controller
                 ];
             }
 
-            if ($threshold > 0 && $quantity <= $threshold) {
+            if ($quantity <= self::CRITICAL_THRESHOLD) {
+                $criticalStock[] = [
+                    'name' => $item->item_name,
+                    'quantity' => $quantity,
+                    'threshold' => self::CRITICAL_THRESHOLD,
+                ];
+            } elseif ($effectiveLowThreshold !== null && $quantity <= $effectiveLowThreshold) {
                 $lowStock[] = [
                     'name' => $item->item_name,
                     'quantity' => $quantity,
-                    'threshold' => $threshold,
+                    'threshold' => $effectiveLowThreshold,
                 ];
             }
         }
@@ -225,6 +277,10 @@ class ReportController extends Controller
         usort($availableStats, fn($a, $b) => $b['quantity'] <=> $a['quantity']);
         $availableChart = array_slice($availableStats, 0, 8);
         $availableNames = array_column(array_slice($availableStats, 0, 16), 'name');
+
+        usort($criticalStock, fn($a, $b) => $a['quantity'] <=> $b['quantity']);
+        $totalCriticalCount = count($criticalStock);
+        $criticalStock = array_slice($criticalStock, 0, 8);
 
         usort($lowStock, fn($a, $b) => $a['quantity'] <=> $b['quantity']);
         $totalLowStockCount = count($lowStock);
@@ -236,6 +292,8 @@ class ReportController extends Controller
             'available_stock_chart' => $availableChart,
             'low_stock_items' => $lowStock,
             'low_stock_count' => $totalLowStockCount,
+            'critical_stock_items' => $criticalStock,
+            'critical_stock_count' => $totalCriticalCount,
         ];
     }
 
@@ -288,7 +346,7 @@ class ReportController extends Controller
         return $rows->toArray();
     }
 
-    protected function getSupplierPerformance()
+    protected function getSupplierPerformance(?Carbon $start = null, ?Carbon $end = null, ?int $top = null)
     {
         $rows = Supplier::query()
             ->select([
@@ -300,15 +358,23 @@ class ReportController extends Controller
                 DB::raw('SUM(CASE WHEN o.expected_date IS NOT NULL AND o.status_processed_at IS NOT NULL AND o.status_processed_at <= o.expected_date THEN 1 ELSE 0 END) as on_time_orders'),
                 DB::raw('MAX(COALESCE(o.status_processed_at, o.order_date)) as last_delivery_at'),
             ])
-            ->leftJoin('orders as o', function ($join) {
+            ->leftJoin('orders as o', function ($join) use ($start, $end) {
                 $join->on('o.supplier_id', '=', 'suppliers.id')
                     ->where('o.order_type', 'Supplier')
                     ->whereIn('o.order_status', ['Confirmed', 'Completed']);
+
+                if ($start && $end) {
+                    $join->whereBetween('o.order_date', [
+                        $start->toDateString(),
+                        $end->toDateString(),
+                    ]);
+                }
             })
             ->where('suppliers.is_system', false)
             ->groupBy('suppliers.id', 'suppliers.supplier_name', 'suppliers.contact_person', 'suppliers.phone')
             ->orderByDesc(DB::raw('total_orders'))
             ->orderBy('suppliers.supplier_name')
+            ->when($top, fn($query, $limit) => $query->limit($limit))
             ->get();
 
         return $rows->map(function ($row) {
@@ -329,5 +395,3 @@ class ReportController extends Controller
         });
     }
 }
-
-

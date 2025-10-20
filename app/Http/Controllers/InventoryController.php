@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Log;
 
 class InventoryController extends Controller
 {
+    private const CRITICAL_THRESHOLD = 10;
+
     /**
      * Display a listing of the resource (READ operation).
      */
@@ -23,11 +25,14 @@ class InventoryController extends Controller
             ->map(function ($item) {
                 $totalQuantity = $item->stockLevels->sum('quantity');
                 $minStock = $item->stockLevels->max('minimum_stock_threshold');
+                $lowThreshold = $minStock !== null && (float) $minStock > self::CRITICAL_THRESHOLD
+                    ? (float) $minStock
+                    : null;
                 $hasOrderHistory = $item->order_items_count > 0;
-                
-                if ($totalQuantity <= 0) {
+
+                if ($totalQuantity <= self::CRITICAL_THRESHOLD) {
                     $status = 'Critical';
-                } elseif ($totalQuantity < $minStock) {
+                } elseif ($lowThreshold !== null && $totalQuantity <= $lowThreshold) {
                     $status = 'Low';
                 } else {
                     $status = 'Normal';
@@ -145,7 +150,7 @@ class InventoryController extends Controller
             $batch = new StockLevel([
                 'item_id' => $inventoryItem->id,
                 'quantity' => 0,
-                'minimum_stock_threshold' => 10,
+                'minimum_stock_threshold' => self::CRITICAL_THRESHOLD + 1,
             ]);
         }
 
@@ -172,7 +177,7 @@ class InventoryController extends Controller
 
         $validated = $request->validate([
             'unit_of_measure' => 'nullable|string|max:50',
-            'minimum_stock_threshold' => 'nullable|numeric|min:0',
+            'minimum_stock_threshold' => ['nullable', 'numeric', 'gt:' . self::CRITICAL_THRESHOLD],
             'quantity' => 'nullable|numeric|min:0',
         ]);
 
@@ -184,7 +189,9 @@ class InventoryController extends Controller
         }
 
         if (array_key_exists('minimum_stock_threshold', $validated)) {
-            $threshold = (int) $validated['minimum_stock_threshold'];
+            $threshold = $validated['minimum_stock_threshold'] === null
+                ? null
+                : max(self::CRITICAL_THRESHOLD + 1, (float) $validated['minimum_stock_threshold']);
             $inventoryItem->stockLevels()->update(['minimum_stock_threshold' => $threshold]);
             $thresholdForNewLevels = $threshold;
         }
@@ -232,7 +239,12 @@ class InventoryController extends Controller
         }
 
         if ($preferredThreshold === null) {
-            $preferredThreshold = (float) $stockLevels->max('minimum_stock_threshold') ?: 0;
+            $existing = $stockLevels->max('minimum_stock_threshold');
+            $preferredThreshold = $existing !== null ? (float) $existing : null;
+        }
+
+        if ($preferredThreshold === null || $preferredThreshold <= self::CRITICAL_THRESHOLD) {
+            $preferredThreshold = self::CRITICAL_THRESHOLD + 1;
         }
 
         if ($targetQuantity > $currentTotal) {

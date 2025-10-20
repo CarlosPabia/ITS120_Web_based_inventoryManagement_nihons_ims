@@ -88,6 +88,9 @@
             @php
                 $inventorySummary = $inventorySummary ?? ['total_quantity' => 0, 'sku_count' => 0, 'total_value' => 0];
                 $lowStockItems = $lowStockItems ?? [];
+                $lowStockCount = $lowStockCount ?? count($lowStockItems);
+                $criticalStockItems = $criticalStockItems ?? [];
+                $criticalStockCount = $criticalStockCount ?? count($criticalStockItems);
                 $availableStock = $availableStock ?? [];
                 $availableStockChart = $availableStockChart ?? [];
                 $salesChartData = array_slice($topSellingItems ?? [], 0, 5);
@@ -117,6 +120,26 @@
                     <a href="{{ route('inventory.index') }}" class="review-btn">Review</a>
                 </div>
 
+                <div class="card summary-box critical-stock-card">
+                    <button class="close-btn" type="button"><i class="fas fa-times"></i></button>
+                    <h4>Critical Stock</h4>
+                    <div class="summary-content">
+                        <i class="fas fa-exclamation-circle critical-icon"></i>
+                        <span class="main-metric">{{ number_format((int) $criticalStockCount) }}</span>
+                        <p class="sub-metric-label">Items at or below 10 units</p>
+                    </div>
+                    @if($criticalStockCount)
+                        <ul class="mini-summary-list">
+                            @foreach($criticalStockItems as $item)
+                                <li>{{ $item['name'] }} ({{ number_format($item['quantity']) }} units)</li>
+                            @endforeach
+                        </ul>
+                    @else
+                        <p class="sub-metric-label">No items at or below 10 units.</p>
+                    @endif
+                    <a href="{{ route('inventory.index') }}" class="review-btn">Review</a>
+                </div>
+
                 <div class="card summary-box low-stock-card">
                     <button class="close-btn" type="button"><i class="fas fa-times"></i></button>
                     <h4>Low Stock Items</h4>
@@ -124,18 +147,18 @@
                         <i class="fas fa-exclamation-triangle warning-icon"></i>
                         <span class="main-metric">{{ number_format((int) $lowStockCount) }}</span>
                         <div class="sub-metric">
-                            <p class="sub-metric-value">Critical Items</p>
-                            <p class="sub-metric-label">{{ number_format(count($lowStockItems)) }} shown</p>
+                            <p class="sub-metric-value">{{ number_format(count($lowStockItems)) }} shown</p>
+                            <p class="sub-metric-label">Below manager thresholds</p>
                         </div>
                     </div>
-                    @if(count($lowStockItems))
+                    @if($lowStockCount)
                         <ul class="mini-summary-list">
                             @foreach($lowStockItems as $item)
                                 <li>{{ $item['name'] }} ({{ number_format($item['quantity']) }}/{{ number_format($item['threshold']) }})</li>
                             @endforeach
                         </ul>
                     @else
-                        <p class="sub-metric-label">All stock levels are healthy.</p>
+                        <p class="sub-metric-label">No low stock alerts.</p>
                     @endif
                     <a href="{{ route('inventory.index') }}" class="review-btn">Review</a>
                 </div>
@@ -151,7 +174,7 @@
                     @if($pendingOrdersList->isNotEmpty())
                         <ul class="mini-summary-list">
                             @foreach($pendingOrdersList->take(4) as $order)
-                                <li>{{ $order['display_id'] }} Ã‚Â· {{ $order['supplier'] }} Ã‚Â· {{ $order['order_date'] }}</li>
+                                <li>{{ $order['display_id'] }} &mdash; {{ $order['supplier'] }} &mdash; {{ $order['order_date'] }}</li>
                             @endforeach
                         </ul>
                     @else
@@ -229,14 +252,13 @@
         window.dashboardData = {
             inventoryBar: @json($availableStockChart),
             salesPie: @json($salesChartData),
+            lowStockItems: @json($lowStockItems),
+            criticalStockItems: @json($criticalStockItems),
         };
     </script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
+    <script src="{{ asset('js/dialog.js') }}" defer></script>
     <script src="{{ asset('js/dashboard.js') }}" defer></script>
     <script src="{{ asset('js/notify.js') }}" defer></script>
 </body>
 </html>
-
-
-
-

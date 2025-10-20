@@ -150,7 +150,15 @@
                                             <form action="{{ route('user.destroy', $user) }}" method="POST" style="display:inline;">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="action-btn" style="color:#c0392b;" onclick="return confirm('Delete {{ $user->first_name }} {{ $user->last_name }}?');">Delete</button>
+                                                <button type="submit"
+                                                        class="action-btn"
+                                                        style="color:#c0392b;"
+                                                        data-confirm="Delete {{ $user->first_name }} {{ $user->last_name }}?"
+                                                        data-confirm-title="Delete User"
+                                                        data-confirm-accept="Delete"
+                                                        data-confirm-tone="danger">
+                                                    Delete
+                                                </button>
                                             </form>
                                         </td>
                                     </tr>
@@ -312,6 +320,7 @@
         </div>
     @endforeach
 
+    <script src="{{ asset('js/dialog.js') }}" defer></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');

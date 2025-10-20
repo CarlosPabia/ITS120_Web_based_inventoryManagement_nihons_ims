@@ -100,6 +100,9 @@
                                     <a href="{{ route('reports.index') }}" class="secondary-btn outline-btn">Reset</a>
                                 </div>
                             </div>
+                            <input type="hidden" name="supplier_start_date" value="{{ $supplierFilters['start_date'] ?? '' }}">
+                            <input type="hidden" name="supplier_end_date" value="{{ $supplierFilters['end_date'] ?? '' }}">
+                            <input type="hidden" name="supplier_top" value="{{ $supplierFilters['top'] ?? 10 }}">
                         </form>
 
                         <table class="data-table report-table">
@@ -152,6 +155,33 @@
 
                     <div id="supplier-report" class="report-detail-card card hidden">
                         <h3 class="report-title">SUPPLIER REPORT</h3>
+                        <form method="GET" action="{{ route('reports.index') }}" class="report-filter-form">
+                            <div class="filter-grid">
+                                <label class="filter-field">
+                                    <span>Start Date</span>
+                                    <input type="date" name="supplier_start_date" value="{{ $supplierFilters['start_date'] ?? '' }}">
+                                </label>
+                                <label class="filter-field">
+                                    <span>End Date</span>
+                                    <input type="date" name="supplier_end_date" value="{{ $supplierFilters['end_date'] ?? '' }}">
+                                </label>
+                                <label class="filter-field">
+                                    <span>Top Results</span>
+                                    <select name="supplier_top">
+                                        @foreach([5,10,15,20,50] as $option)
+                                            <option value="{{ $option }}" @selected(($supplierFilters['top'] ?? 10) == $option)>Top {{ $option }}</option>
+                                        @endforeach
+                                    </select>
+                                </label>
+                                <div class="filter-actions">
+                                    <button type="submit" class="primary-btn">Apply</button>
+                                    <a href="{{ route('reports.index') }}" class="secondary-btn outline-btn">Reset</a>
+                                </div>
+                            </div>
+                            <input type="hidden" name="start_date" value="{{ $internalSalesFilters['start_date'] ?? '' }}">
+                            <input type="hidden" name="end_date" value="{{ $internalSalesFilters['end_date'] ?? '' }}">
+                            <input type="hidden" name="top" value="{{ $internalSalesFilters['top'] ?? 10 }}">
+                        </form>
                         <table class="data-table report-table">
                             <thead>
                                 <tr>
@@ -169,7 +199,7 @@
                                         <td>{{ $supplier['contact'] }}</td>
                                         <td>{{ number_format($supplier['total_orders']) }}</td>
                                         <td>
-                                            {{ $supplier['on_time_rate'] !== null ? $supplier['on_time_rate'] . '%' : 'â€”' }}
+                                            {!! $supplier['on_time_rate'] !== null ? $supplier['on_time_rate'] . '%' : '&mdash;' !!}
                                         </td>
                                         <td>{{ $supplier['last_delivery'] }}</td>
                                     </tr>
@@ -190,6 +220,7 @@
         </main>
     </div>
 
+    <script src="{{ asset('js/dialog.js') }}" defer></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const userDropdown = document.querySelector('.user-dropdown');
@@ -233,3 +264,8 @@
     <script src="{{ asset('js/notify.js') }}" defer></script>
 </body>
 </html>
+
+
+
+
+

@@ -198,6 +198,7 @@
     </div>
 
     {{-- Link to the new, dedicated JavaScript file for this page --}}
+    <script src="{{ asset('js/dialog.js') }}" defer></script>
     <script src="{{ asset('js/suppliers.js') }}?v=3" defer></script>
     <script src="{{ asset('.html/script_Front.js') }}" defer></script>
     <script src="{{ asset('js/notify.js') }}" defer></script>

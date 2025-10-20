@@ -1,6 +1,22 @@
 document.addEventListener('DOMContentLoaded', () => {
     const API_URL = '/suppliers-data';
 
+    const userDropdown = document.querySelector('.user-dropdown');
+    let dropdownContent = null;
+    if (userDropdown) {
+        dropdownContent = userDropdown.querySelector('.dropdown-content');
+        userDropdown.addEventListener('click', event => {
+            event.stopPropagation();
+            if (dropdownContent) dropdownContent.classList.toggle('show');
+        });
+
+        window.addEventListener('click', event => {
+            if (userDropdown && !userDropdown.contains(event.target) && dropdownContent) {
+                dropdownContent.classList.remove('show');
+            }
+        });
+    }
+
     const grid = document.getElementById('supplier-cards-grid');
     const searchInput = document.getElementById('supplier-search');
     const addForm = document.getElementById('add-supplier-form');
@@ -409,13 +425,13 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        if (Number.isNaN(thresholdValue)) {
-            notify.warn('Minimum threshold must be a valid number.');
+        if (thresholdValue === null || Number.isNaN(thresholdValue)) {
+            notify.warn('Minimum threshold must be a valid number greater than 10.');
             return;
         }
 
-        if (thresholdValue !== null && thresholdValue < 0) {
-            notify.warn('Minimum threshold cannot be negative.');
+        if (thresholdValue <= 10) {
+            notify.warn('Minimum threshold must be greater than 10.');
             return;
         }
 
@@ -484,13 +500,13 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        if (Number.isNaN(thresholdValue)) {
-            notify.warn('Minimum threshold must be a valid number.');
+        if (thresholdValue === null || Number.isNaN(thresholdValue)) {
+            notify.warn('Minimum threshold must be a valid number greater than 10.');
             return;
         }
 
-        if (thresholdValue !== null && thresholdValue < 0) {
-            notify.warn('Minimum threshold cannot be negative.');
+        if (thresholdValue <= 10) {
+            notify.warn('Minimum threshold must be greater than 10.');
             return;
         }
 
@@ -662,9 +678,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function deleteSupplier(supplierId) {
-        if (!confirm('Are you sure you want to delete this supplier? This action cannot be undone.')) {
-            return;
-        }
+        const confirmed = window.dialogs?.confirm
+            ? await window.dialogs.confirm({
+                title: 'Delete Supplier',
+                message: 'Are you sure you want to delete this supplier? This action cannot be undone.',
+                confirmText: 'Delete',
+                cancelText: 'Cancel',
+                tone: 'danger',
+            })
+            : window.confirm('Are you sure you want to delete this supplier? This action cannot be undone.');
+        if (!confirmed) return;
 
         try {
             const response = await fetch(`${API_URL}/${supplierId}`, {

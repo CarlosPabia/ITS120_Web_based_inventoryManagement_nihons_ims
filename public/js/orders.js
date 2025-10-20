@@ -6,6 +6,22 @@ document.addEventListener('DOMContentLoaded', () => {
     suppliersIndex: '/suppliers-data',
   };
 
+  const userDropdown = document.querySelector('.user-dropdown');
+  let dropdownContent = null;
+  if (userDropdown) {
+    dropdownContent = userDropdown.querySelector('.dropdown-content');
+    userDropdown.addEventListener('click', event => {
+      event.stopPropagation();
+      if (dropdownContent) dropdownContent.classList.toggle('show');
+    });
+
+    window.addEventListener('click', event => {
+      if (userDropdown && !userDropdown.contains(event.target) && dropdownContent) {
+        dropdownContent.classList.remove('show');
+      }
+    });
+  }
+
   const ordersTableBody = document.getElementById('orders-table-body');
   const orderModal = document.getElementById('order-modal');
   const orderForm = document.getElementById('order-form');
@@ -79,6 +95,19 @@ document.addEventListener('DOMContentLoaded', () => {
     supplier: document.getElementById('details-supplier-name'),
     itemsBody: document.getElementById('details-item-list'),
     total: document.getElementById('details-order-total'),
+  };
+
+  const confirmDanger = ({ title, message, confirmText = 'Delete' }) => {
+    if (window.dialogs?.confirm) {
+      return window.dialogs.confirm({
+        title,
+        message,
+        confirmText,
+        cancelText: 'Cancel',
+        tone: 'danger',
+      });
+    }
+    return Promise.resolve(window.confirm(message));
   };
 
   const state = { orders: [], inventory: [], suppliers: [] };
@@ -358,11 +387,14 @@ document.addEventListener('DOMContentLoaded', () => {
         deleteBtn.type = 'button';
         deleteBtn.className = 'danger-btn compact-btn';
         deleteBtn.textContent = 'Delete';
-        deleteBtn.addEventListener('click', event => {
+        deleteBtn.addEventListener('click', async event => {
           event.stopPropagation();
-          if (window.confirm('Delete this order? This action cannot be undone.')) {
-            deleteOrder(order.id);
-          }
+          const confirmed = await confirmDanger({
+            title: 'Delete Order',
+            message: 'Delete this order? This action cannot be undone.',
+          });
+          if (!confirmed) return;
+          deleteOrder(order.id);
         });
         actionsCell.appendChild(deleteBtn);
       }
@@ -994,11 +1026,14 @@ document.addEventListener('DOMContentLoaded', () => {
   on(typeFilter, 'change', applyFiltersAndRender);
   on(statusFilter, 'change', applyFiltersAndRender);
   on(detailsSaveBtn, 'click', submitOrderUpdate);
-  on(detailsDeleteBtn, 'click', () => {
+  on(detailsDeleteBtn, 'click', async () => {
     if (!detailsDeleteBtn?.dataset.orderId) return;
-    if (window.confirm('Delete this order? This action cannot be undone.')) {
-      deleteOrder(detailsDeleteBtn.dataset.orderId);
-    }
+    const confirmed = await confirmDanger({
+      title: 'Delete Order',
+      message: 'Delete this order? This action cannot be undone.',
+    });
+    if (!confirmed) return;
+    deleteOrder(detailsDeleteBtn.dataset.orderId);
   });
 
   window.addEventListener('click', event => {

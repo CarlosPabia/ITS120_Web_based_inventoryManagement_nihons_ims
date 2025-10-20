@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   initCharts();
+  emitInventoryAlerts();
 });
 
 function initCharts() {
@@ -123,3 +124,50 @@ function initCharts() {
   }
 }
 
+function emitInventoryAlerts(retryCount = 0) {
+  if (!window.dashboardData) return;
+
+  const { lowStockItems = [], criticalStockItems = [] } = window.dashboardData;
+  const criticalList = Array.isArray(criticalStockItems) ? criticalStockItems : [];
+  const lowList = Array.isArray(lowStockItems) ? lowStockItems : [];
+  const hasCritical = criticalList.length > 0;
+  const hasLow = lowList.length > 0;
+
+  if (!hasCritical && !hasLow) {
+    return;
+  }
+
+  const notifyApi = window.notify;
+  if (!notifyApi || typeof notifyApi !== 'object') {
+    if (retryCount < 5) {
+      setTimeout(() => emitInventoryAlerts(retryCount + 1), 250);
+    } else {
+      const details = {
+        critical: criticalList.map(item => item?.name).filter(Boolean),
+        low: lowList.map(item => item?.name).filter(Boolean),
+      };
+      console.warn('Inventory alerts pending toast renderer:', details);
+    }
+    return;
+  }
+
+  const formatNames = list => list
+    .map(item => item && item.name ? String(item.name) : '')
+    .filter(Boolean)
+    .slice(0, 3)
+    .join(', ');
+
+  if (hasCritical && typeof notifyApi.error === 'function') {
+    const sample = formatNames(criticalList);
+    const suffix = sample ? ` (e.g., ${sample})` : '';
+    const count = criticalList.length;
+    notifyApi.error(`${count} inventory item${count === 1 ? '' : 's'} at or below 10 units${suffix}.`, { duration: 6000 });
+  }
+
+  if (hasLow && typeof notifyApi.warn === 'function') {
+    const sample = formatNames(lowList);
+    const suffix = sample ? ` (e.g., ${sample})` : '';
+    const count = lowList.length;
+    notifyApi.warn(`${count} inventory item${count === 1 ? '' : 's'} below manager thresholds${suffix}.`, { duration: 5000 });
+  }
+}

@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Log;
 
 class OrderController extends Controller
 {
+    private const CRITICAL_THRESHOLD = 10;
     /**
      * Display a listing of orders (READ operation for Order History).
      */
@@ -323,7 +324,10 @@ class OrderController extends Controller
             'expiry_date' => $expiryDate, 
         ]);
         $batch->quantity += $quantityToAdd;
-        $batch->minimum_stock_threshold = $batch->minimum_stock_threshold > 0 ? $batch->minimum_stock_threshold : 10;
+        $threshold = $batch->minimum_stock_threshold;
+        $batch->minimum_stock_threshold = $threshold !== null && $threshold > self::CRITICAL_THRESHOLD
+            ? $threshold
+            : self::CRITICAL_THRESHOLD + 1;
         $batch->save();
     }
 }

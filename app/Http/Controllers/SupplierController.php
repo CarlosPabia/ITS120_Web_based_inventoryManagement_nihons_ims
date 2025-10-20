@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\DB;
 
 class SupplierController extends Controller
 {
+    private const CRITICAL_THRESHOLD = 10;
+
     /**
      * Display a listing of the resource.
      */
@@ -176,7 +178,7 @@ class SupplierController extends Controller
             'new_items.*.unit' => ['nullable', 'string', 'max:50'],
             'new_items.*.description' => ['nullable', 'string'],
             'new_items.*.initial_quantity' => ['nullable', 'numeric', 'min:0'],
-            'new_items.*.minimum_stock_threshold' => ['nullable', 'numeric', 'min:0'],
+            'new_items.*.minimum_stock_threshold' => ['nullable', 'numeric', 'gt:' . self::CRITICAL_THRESHOLD],
             'new_items.*.price' => ['required', 'numeric', 'min:0'],
             'existing_items' => ['sometimes', 'array'],
             'existing_items.*.id' => ['required', 'integer', 'exists:inventory_items,id'],
@@ -195,7 +197,7 @@ class SupplierController extends Controller
             $unit = isset($item['unit']) ? trim($item['unit']) : '';
             $description = isset($item['description']) ? trim($item['description']) : '';
             $initialQuantity = isset($item['initial_quantity']) ? (float) $item['initial_quantity'] : 0;
-            $minimumThreshold = isset($item['minimum_stock_threshold']) ? (float) $item['minimum_stock_threshold'] : 0;
+            $minimumThreshold = isset($item['minimum_stock_threshold']) ? (float) $item['minimum_stock_threshold'] : null;
             $price = isset($item['price']) ? (float) $item['price'] : 0;
 
             $inventoryItem = InventoryItem::create([
@@ -208,7 +210,9 @@ class SupplierController extends Controller
 
             $inventoryItem->stockLevels()->create([
                 'quantity' => max(0, $initialQuantity),
-                'minimum_stock_threshold' => max(0, $minimumThreshold),
+                'minimum_stock_threshold' => $minimumThreshold !== null
+                    ? max(self::CRITICAL_THRESHOLD + 1, $minimumThreshold)
+                    : null,
                 'expiry_date' => null,
             ]);
 
