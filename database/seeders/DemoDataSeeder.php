@@ -459,7 +459,7 @@ class DemoDataSeeder extends Seeder
             }
         }
 
-        ActivityLog::insert([
+        collect([
             [
                 'user_id' => $userId,
                 'activity_type' => 'Dataset Reset',
@@ -478,6 +478,6 @@ class DemoDataSeeder extends Seeder
                 'details' => 'Recorded HQ finished goods transfer plus confirmed Spanish Latte and pastry sales.',
                 'timestamp' => $now->copy()->subMinutes(5),
             ],
-        ]);
+        ])->each(fn ($log) => ActivityLog::create($log));
     }
 }
