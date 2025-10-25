@@ -67,18 +67,17 @@ class OrderController extends Controller
         $inventoryItems = InventoryItem::whereIn('id', $itemIds)->get()->keyBy('id');
 
         $orderType = $validated['order_type'];
+        $isInternalSupplier = (bool) $supplier->is_system;
+        $requiresScheduling = $orderType === 'Supplier' && !$isInternalSupplier;
+
         if ($orderType === 'Supplier') {
             if (!$supplier->is_active) {
                 return response()->json([
                     'error' => 'Cannot create an order for an inactive supplier.'
                 ], 422);
             }
-            if (false) {
-                return response()->json([
-                    'error' => 'Internal supplier cannot be selected for Supplier (Adding) orders.'
-                ], 422);
-            }
-            if (empty($validated['order_date']) || empty($validated['expected_date'])) {
+
+            if ($requiresScheduling && (empty($validated['order_date']) || empty($validated['expected_date']))) {
                 return response()->json([
                     'error' => 'Order date and expected date are required for supplier orders.'
                 ], 422);
@@ -110,15 +109,17 @@ class OrderController extends Controller
 
         $expectedDate = $validated['expected_date']
             ? Carbon::parse($validated['expected_date'])
-            : ($orderType === 'Supplier' ? null : $orderDate->copy());
+            : $orderDate->copy();
         
         DB::beginTransaction();
         try {
+            $shouldAutoConfirm = $orderType === 'Supplier' && $isInternalSupplier;
+
             $order = Order::create([
                 'order_type' => $orderType,
                 'action_type' => $orderType === 'Supplier' ? 'Add' : 'Deduct',
                 'supplier_id' => $validated['supplier_id'],
-                'order_status' => 'Pending',
+                'order_status' => $shouldAutoConfirm ? 'Confirmed' : 'Pending',
                 'order_date' => $orderType === 'Supplier' ? $orderDate : Carbon::now(),
                 'expected_date' => $orderType === 'Supplier' ? $expectedDate : ($expectedDate ?? Carbon::now()),
                 'created_by_user_id' => Auth::id(),
@@ -134,14 +135,28 @@ class OrderController extends Controller
                 ]);
             }
 
+            if ($shouldAutoConfirm) {
+                $this->processConfirmedOrder($order);
+                $order->status_processed_at = Carbon::now();
+                $order->save();
+            }
+
             DB::commit();
+
             ActivityLog::create([
                 'user_id' => Auth::id(),
                 'activity_type' => 'Order Created',
-                'details' => sprintf('Order #%d (%s) recorded with status %s.', $order->id, $order->order_type, $order->order_status),
+                'details' => $shouldAutoConfirm
+                    ? sprintf('Order #%d (Internal Supplier) auto-confirmed.', $order->id)
+                    : sprintf('Order #%d (%s) recorded with status %s.', $order->id, $order->order_type, $order->order_status),
             ]);
 
-            return response()->json(['message' => 'Order created successfully and is now pending confirmation.', 'order' => $order], 201);
+            return response()->json([
+                'message' => $shouldAutoConfirm
+                    ? 'Order created and auto-confirmed.'
+                    : 'Order created successfully and is now pending confirmation.',
+                'order' => $order
+            ], 201);
         } catch (\Throwable $e) {
             DB::rollBack();
             Log::error('Order creation failed', [
