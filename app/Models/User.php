@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo; // For the Role relationship
-use App\Casts\EncryptedFallback;
 
 class User extends Authenticatable
 {
@@ -43,15 +42,14 @@ class User extends Authenticatable
         return $this->password_hash;
     }
 
-    // 5. Attribute casts (PII encryption with legacy fallback)
+    // 5. Remove unnecessary casting for your custom table
     protected function casts(): array
     {
         return [
-            'first_name' => EncryptedFallback::class,
-            'last_name'  => EncryptedFallback::class,
-            // Keep email and employee_id plaintext for login and unique lookups
-            'email_verified_at' => 'datetime',
-            'is_active' => 'boolean',
+            // Only keeping default verified_at casting, as we handle the password separately.
+            // Note: Your custom table does not have 'email_verified_at', so we leave it here 
+            // but its presence won't break anything.
+            'email_verified_at' => 'datetime', 
         ];
     }
     
