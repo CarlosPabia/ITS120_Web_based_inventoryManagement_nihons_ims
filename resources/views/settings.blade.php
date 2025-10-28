@@ -201,8 +201,8 @@
                                 <td>Employee</td>
                                 <td style="text-align:center;">View</td>
                                 <td style="text-align:center;">Create / View</td>
-                                <td style="text-align:center;">View</td>
-                                <td style="text-align:center;">View</td>
+                                <td style="text-align:center;">Restricted</td>
+                                <td style="text-align:center;">Restricted</td>
                                 <td style="text-align:center;">Restricted</td>
                             </tr>
                         </tbody>
