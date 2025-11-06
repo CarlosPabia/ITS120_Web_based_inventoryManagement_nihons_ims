@@ -1,12 +1,12 @@
 /* 1. ROLES Table (For RBAC) */
 CREATE TABLE IF NOT EXISTS `roles` (
-    `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     `role_name` VARCHAR(50) NOT NULL UNIQUE COMMENT 'e.g., Manager, Employee'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 /* 2. USERS Table (Employee Accounts) */
 CREATE TABLE IF NOT EXISTS `users` (
-    `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     `email` VARCHAR(100) NOT NULL UNIQUE,
     `employee_id` VARCHAR(20) NOT NULL UNIQUE,
     /* Store hashed password using a strong algorithm (e.g., bcrypt/Argon2 via PHP, not raw) */
@@ -14,26 +14,26 @@ CREATE TABLE IF NOT EXISTS `users` (
     `first_name` VARCHAR(50) NOT NULL,
     `last_name` VARCHAR(50) NOT NULL,
     `starting_date` DATE,
-    `role_id` INT UNSIGNED NOT NULL,
+    `role_id` BIGINT UNSIGNED NOT NULL,
     `is_active` BOOLEAN DEFAULT TRUE,
     FOREIGN KEY (`role_id`) REFERENCES `roles`(`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 /* 3. SUPPLIERS Table */
 CREATE TABLE IF NOT EXISTS `suppliers` (
-    `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     `supplier_name` VARCHAR(100) NOT NULL,
-    `contact_person` VARCHAR(100),
-    `phone` VARCHAR(20),
-    `email` VARCHAR(100)
+    `contact_person` TEXT,
+    `phone` TEXT,
+    `email` TEXT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 /* 4. INVENTORY_ITEMS Table */
 CREATE TABLE IF NOT EXISTS `inventory_items` (
-    `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     `item_name` VARCHAR(100) NOT NULL UNIQUE,
     `item_description` TEXT,
-    `supplier_id` INT UNSIGNED,
+    `supplier_id` BIGINT UNSIGNED,
     `unit_of_measure` VARCHAR(20) NULL,
     `default_unit_price` DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
     FOREIGN KEY (`supplier_id`) REFERENCES `suppliers`(`id`)
@@ -43,8 +43,8 @@ CREATE TABLE IF NOT EXISTS `inventory_items` (
    NOTE: The 'encrypted_records' requirement for AES-256 storage will be handled at the application (Laravel) level
    before insertion into the database, for sensitive data if needed. */
 CREATE TABLE IF NOT EXISTS `stock_levels` (
-    `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    `item_id` INT UNSIGNED NOT NULL,
+    `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `item_id` BIGINT UNSIGNED NOT NULL,
     `quantity` DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
     `expiry_date` DATE NULL COMMENT 'For expiring items alert',
     `minimum_stock_threshold` DECIMAL(10, 2) DEFAULT 0.00 COMMENT 'For Low Stock alert',
@@ -55,21 +55,21 @@ CREATE TABLE IF NOT EXISTS `stock_levels` (
 
 /* 6. ORDERS Table (Header) */
 CREATE TABLE IF NOT EXISTS `orders` (
-    `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     `order_type` ENUM('Supplier', 'Customer') NOT NULL,
-    `supplier_id` INT UNSIGNED NULL, /* NULL if a customer order/sale */
+    `supplier_id` BIGINT UNSIGNED NULL, /* NULL if a customer order/sale */
     `order_status` VARCHAR(50) NOT NULL COMMENT 'e.g., Pending, Confirmed, Cancelled',
     `order_date` DATETIME NOT NULL,
-    `created_by_user_id` INT UNSIGNED NOT NULL,
+    `created_by_user_id` BIGINT UNSIGNED NOT NULL,
     FOREIGN KEY (`supplier_id`) REFERENCES `suppliers`(`id`),
     FOREIGN KEY (`created_by_user_id`) REFERENCES `users`(`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 /* 7. ORDER_ITEMS Table (Line Items) */
 CREATE TABLE IF NOT EXISTS `order_items` (
-    `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    `order_id` INT UNSIGNED NOT NULL,
-    `item_id` INT UNSIGNED NOT NULL,
+    `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `order_id` BIGINT UNSIGNED NOT NULL,
+    `item_id` BIGINT UNSIGNED NOT NULL,
     `quantity_ordered` DECIMAL(10, 2) NOT NULL,
     `unit_price` DECIMAL(10, 2) NOT NULL,
     FOREIGN KEY (`order_id`) REFERENCES `orders`(`id`),
@@ -79,10 +79,9 @@ CREATE TABLE IF NOT EXISTS `order_items` (
 /* 8. ACTIVITY_LOG Table (For accountability) */
 CREATE TABLE IF NOT EXISTS `activity_log` (
     `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    `user_id` INT UNSIGNED NOT NULL,
+    `user_id` BIGINT UNSIGNED NOT NULL,
     `activity_type` VARCHAR(100) NOT NULL, /* e.g., 'Stock Update', 'Login', 'Report Generated' */
     `details` TEXT,
     `timestamp` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (`user_id`) REFERENCES `users`(`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
